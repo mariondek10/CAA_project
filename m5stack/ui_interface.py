@@ -19,3 +19,4 @@ while True:
   speed.setText(str(vitesse))
   wait(1)
   wait_ms(2)
+
