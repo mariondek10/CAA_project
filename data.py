@@ -15,7 +15,7 @@ client = bigquery.Client(project="caabikeproject")
 q = f"""
 INSERT INTO `caabikeproject.BikeProject.geo-data`
 (latitude, longitude)
-VALUES('2025-03-12', '16:02:23')
+VALUES(12.45, 18.45)
 """
 query_job = client.query(q)
 
@@ -33,6 +33,43 @@ print(df)
 
 #M5 flow python code
 '''
+from machine import UART
+import time
+
+def get_gps_fix():
+    gps = UART(2, baudrate=9600, rx=16, tx=17)
+    start = time.ticks_ms()
+    result = None
+    while time.ticks_diff(time.ticks_ms(), start) < 2000:
+        if gps.any():
+            line = gps.readline()
+            if line and b'$GPRMC' in line:
+                result = line
+                break
+    gps.deinit()
+    return result
+
+def send_lora(payload):
+    lora = UART(2, baudrate=115200, rx=16, tx=17)
+    time.sleep_ms(100)  # let module wake up
+    lora.write(f'AT+SEND={payload}\r\n'.encode())
+    time.sleep_ms(500)
+    response = lora.read() if lora.any() else None
+    lora.deinit()
+    return response
+
+while True:
+    # 1. Get GPS position
+    fix = get_gps_fix()
+    print("GPS:", fix)
+
+    # 2. Send it over LoRa
+    if fix:
+        send_lora(fix.decode('utf-8', 'ignore').strip())
+
+    time.sleep(30)
+
+
 setScreenColor(0x29aa54)
 gps_0 = unit.get(unit.GPS, unit.PORTC)
 
