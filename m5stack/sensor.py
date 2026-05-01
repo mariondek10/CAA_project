@@ -1,9 +1,4 @@
-import sys
-if 'sensor' in sys.modules:
-    del sys.modules['sensor']
-
-f = open('/flash/sensor.py', 'w')
-f.write('''from machine import UART
+from machine import UART
 import time
 
 TX_PIN = 14
@@ -56,8 +51,3 @@ def run_loop():
         except Exception as e:
             print("Erreur:", e)
         time.sleep_ms(500)
-''')
-f.close()
-
-import sensor
-sensor.run_loop()
