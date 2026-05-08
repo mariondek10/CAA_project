@@ -24,7 +24,8 @@ def receive_gps(request):
         "latitude":  float(data['lat']),
         "longitude": float(data['lon']),
         "speed":     float(data['speed']),
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
+        "session_id": data.get('session_id', 'unknown')
     }
 
     errors = client.insert_rows_json(TABLE_ID, [row])
