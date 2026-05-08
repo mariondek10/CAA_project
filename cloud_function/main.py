@@ -4,7 +4,7 @@ from datetime import datetime
 import json
 
 client = bigquery.Client()
-TABLE_ID = "caabikeproject.BikeProject.geo-data"
+TABLE_ID = "caabikeproject.BikeProject.geo_data"
 
 @functions_framework.http
 def receive_gps(request):

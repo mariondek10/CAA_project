@@ -13,14 +13,14 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
 client = bigquery.Client(project="caabikeproject")
 
 q = f"""
-INSERT INTO `caabikeproject.BikeProject.geo-data`
+INSERT INTO `caabikeproject.BikeProject.geo_data`
 (latitude, longitude)
 VALUES(12.45, 18.45)
 """
 query_job = client.query(q)
 
 q = """
-SELECT * FROM `caabikeproject.BikeProject.geo-data`
+SELECT * FROM `caabikeproject.BikeProject.geo_data`
 LIMIT 10
 """
 
