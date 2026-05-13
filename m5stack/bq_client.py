@@ -16,7 +16,7 @@ def send_to_bigquery(lat, lon, speed):
             "lon": lon,
             "speed": speed,
             "session_id": SESSION_ID
-        })
+        }) 
         r = urequests.post(
             CLOUD_FUNCTION_URL,
             data=payload,
