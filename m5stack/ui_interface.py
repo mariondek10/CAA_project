@@ -42,7 +42,7 @@ def draw_speed_icon(speed):
         lcd.text(46, 138, "15-40 km/h")
 
     else:
-        # Cheetah — triangle filé vers la droite
+        # Cheetah
         lcd.fillTriangle(6, 134, 20, 122, 20, 146, TEAL)
         lcd.fillTriangle(18, 134, 32, 122, 32, 146, TEAL_LT)
         lcd.fillRect(30, 132, 8, 4, WHITE)
