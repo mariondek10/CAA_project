@@ -1,7 +1,7 @@
 import sensor
 import ui_interface
 import time
-import math  # <--- INDISPENSABLE pour le calcul de vitesse
+import math  
 from machine import UART
 
 # --- 1. GESTION DE LA SESSION ---
