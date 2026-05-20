@@ -1,5 +1,7 @@
 streamlit
 functions-framework==3.*
-requests==2.32.*
-google-cloud-bigquery==3.0.*
-db-dtypes==1.0.0
+pandas
+numpy
+requests
+google-cloud-bigquery
+db-dtypes
