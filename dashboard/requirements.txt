@@ -1,0 +1,7 @@
+streamlit
+functions-framework==3.*
+pandas
+numpy
+requests
+google-cloud-bigquery
+db-dtypes
