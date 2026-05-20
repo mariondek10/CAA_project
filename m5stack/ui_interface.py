@@ -10,43 +10,92 @@ PURPLE  = 0x534AB7
 GREY    = 0x888780
 WHITE   = 0xFFFFFF
 RED     = 0xFF4444
+ORANGE      = 0xEF9F27  
+ORANGE_DARK = 0xBA7517  # orange foncé (crinière)
+BEIGE       = 0xF5C4B3  # museau
+BLACK       = 0x000000
+
+
+# Drawings functions 
+def draw_turtle(x, y):
+    lcd.fillCircle(x, y, 12, TEAL)
+    lcd.fillCircle(x-5, y, 10, TEAL)
+    lcd.fillCircle(x+5, y, 10, TEAL)
+    lcd.fillCircle(x, y-4, 10, TEAL)
+    lcd.fillCircle(x, y+4, 10, TEAL)
+    lcd.fillCircle(x, y, 7, DARK)
+    lcd.fillCircle(x, y-4, 2, TEAL)
+    lcd.fillCircle(x, y+4, 2, TEAL)
+    lcd.fillCircle(x-4, y, 2, TEAL)
+    lcd.fillCircle(x+4, y, 2, TEAL)
+    lcd.fillCircle(x, y-15, 5, TEAL)
+    lcd.fillCircle(x-2, y-16, 1, DARK)  
+    lcd.fillCircle(x+2, y-16, 1, DARK) 
+    lcd.fillCircle(x-13, y-7, 4, TEAL) 
+    lcd.fillCircle(x+13, y-7, 4, TEAL) 
+    lcd.fillCircle(x-13, y+7, 4, TEAL)  
+    lcd.fillCircle(x+13, y+7, 4, TEAL)  
+    lcd.fillCircle(x, y+16, 3, TEAL)
+    
+def draw_bunny(x, y):
+    lcd.fillCircle(x, 136, 8, TEAL)
+    lcd.fillCircle(x, 126, 5, TEAL)
+    lcd.fillRect(x-6, y-12, 4, 12, TEAL)
+    lcd.fillRect(x+2, y-12, 4, 12, TEAL)
+
+def draw_lion(x, y):
+    
+    lcd.fillCircle(x,    y,    13, ORANGE_DARK)
+    lcd.fillCircle(x-10, y-7,   6, ORANGE_DARK)
+    lcd.fillCircle(x+10, y-7,   6, ORANGE_DARK)
+    lcd.fillCircle(x-13, y+1,   5, ORANGE_DARK)
+    lcd.fillCircle(x+13, y+1,   5, ORANGE_DARK)
+    lcd.fillCircle(x-10, y+10,  5, ORANGE_DARK)
+    lcd.fillCircle(x+10, y+10,  5, ORANGE_DARK)
+    lcd.fillCircle(x,    y+13,  5, ORANGE_DARK)
+    
+    lcd.fillCircle(x, y, 10, ORANGE)
+    
+    lcd.fillCircle(x-8, y-8, 4, ORANGE)
+    lcd.fillCircle(x+8, y-8, 4, ORANGE)
+    lcd.fillCircle(x-8, y-8, 2, ORANGE_DARK)
+    lcd.fillCircle(x+8, y-8, 2, ORANGE_DARK)
+    
+    lcd.fillCircle(x-3, y-2, 2, BLACK)
+    lcd.fillCircle(x+3, y-2, 2, BLACK)
+    lcd.fillCircle(x-4, y-3, 1, WHITE)
+    lcd.fillCircle(x+2, y-3, 1, WHITE)
+    
+    lcd.fillCircle(x, y+4, 4, BEIGE)
+    
+    lcd.fillCircle(x, y+2, 1, BLACK)
+
+    lcd.fillCircle(x-6, y+4, 1, BLACK)
+    lcd.fillCircle(x-9, y+3, 1, BLACK)
+    lcd.fillCircle(x+6, y+4, 1, BLACK)
+    lcd.fillCircle(x+9, y+3, 1, BLACK)
 
 def draw_speed_icon(speed):
     lcd.fillRect(0, 118, 320, 32, DARK)
     lcd.font(lcd.FONT_DefaultSmall)
     
     if speed < 15:
-        # Turtle drawing
-        lcd.fillCircle(20, 134, 10, TEAL)
-        lcd.fillCircle(20, 134, 6, DARK)
-        lcd.fillCircle(20, 128, 5, TEAL)
-        lcd.fillRect(10, 138, 4, 6, TEAL)
-        lcd.fillRect(16, 138, 4, 6, TEAL)
-        lcd.fillRect(22, 138, 4, 6, TEAL)
-        lcd.fillRect(28, 138, 4, 6, TEAL)
-        lcd.setTextColor(TEAL_LT, DARK)
+        draw_turtle(20 ,134)
         lcd.text(46, 128, "Turtle")
         lcd.setTextColor(GREY, DARK)
         lcd.text(46, 138, "< 15 km/h")
 
     elif speed < 40:
-        # Bunny drawing
-        lcd.fillCircle(20, 136, 8, TEAL)
-        lcd.fillCircle(20, 126, 5, TEAL)
-        lcd.fillRect(14, 112, 4, 12, TEAL)
-        lcd.fillRect(22, 112, 4, 12, TEAL)
+        draw_bunny(20, 134)
         lcd.setTextColor(TEAL_LT, DARK)
         lcd.text(46, 128, "Bunny")
         lcd.setTextColor(GREY, DARK)
         lcd.text(46, 138, "15-40 km/h")
 
     else:
-        # Cheetah drawing
-        lcd.fillTriangle(6, 134, 20, 122, 20, 146, TEAL)
-        lcd.fillTriangle(18, 134, 32, 122, 32, 146, TEAL_LT)
-        lcd.fillRect(30, 132, 8, 4, WHITE)
+        draw_lion(20, 134)
         lcd.setTextColor(TEAL_LT, DARK)
-        lcd.text(46, 128, "CHEETAH")
+        lcd.text(46, 128, "Lion")
         lcd.setTextColor(GREY, DARK)
         lcd.text(46, 138, "> 40 km/h")
 
