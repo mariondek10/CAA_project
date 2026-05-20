@@ -106,7 +106,6 @@ def init_screen():
     lcd.font(lcd.FONT_DejaVu18)
     lcd.setTextColor(PURPLE, BAR)
     lcd.text(8, 6, "BIKE TRACKER")
-    lcd.fillRect(252, 4, 64, 20, TEAL)
     lcd.font(lcd.FONT_Default)
     lcd.setTextColor(WHITE, TEAL)
     lcd.fillRect(0, 28, 320, 2, PURPLE)
