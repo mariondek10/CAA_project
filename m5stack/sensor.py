@@ -7,15 +7,22 @@ RX_PIN = 13
 def parse_gnrmc(sentence):
     try:
         parts = sentence.strip().split(',')
-        if len(parts) < 7 or parts[2] != 'A':
+        if len(parts) < 8 or parts[2] != 'A': # On vérifie qu'on a assez de colonnes
             return None
         if not (parts[0] in ('$GNRMC', '$GPRMC')):
             return None
+        
         lat = float(parts[3][:2]) + float(parts[3][2:]) / 60
         if parts[4] == 'S': lat = -lat
+        
         lon = float(parts[5][:3]) + float(parts[5][3:]) / 60
         if parts[6] == 'W': lon = -lon
-        return lat, lon
+        
+        # Récupération de la vitesse (parts[7] est en nœuds)
+        speed_knots = float(parts[7]) if parts[7] else 0.0
+        speed_kmh = speed_knots * 1.852 # Conversion nœuds -> km/h
+        
+        return lat, lon, speed_kmh 
     except:
         return None
 
@@ -51,3 +58,4 @@ def run_loop():
         except Exception as e:
             print("Erreur:", e)
         time.sleep_ms(500)
+
