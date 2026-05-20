@@ -11,8 +11,8 @@ GREY    = 0x888780
 WHITE   = 0xFFFFFF
 RED     = 0xFF4444
 ORANGE      = 0xEF9F27  
-ORANGE_DARK = 0xBA7517  # orange foncé (crinière)
-BEIGE       = 0xF5C4B3  # museau
+ORANGE_DARK = 0xBA7517  
+BEIGE       = 0xF5C4B3 
 BLACK       = 0x000000
 
 
@@ -81,21 +81,21 @@ def draw_speed_icon(speed):
     
     if speed < 15:
         draw_turtle(20 ,134)
-        lcd.text(46, 128, "Turtle")
+        lcd.text(46, 128, "TURTLE")
         lcd.setTextColor(GREY, DARK)
         lcd.text(46, 138, "< 15 km/h")
 
     elif speed < 40:
         draw_bunny(20, 134)
         lcd.setTextColor(TEAL_LT, DARK)
-        lcd.text(46, 128, "Bunny")
+        lcd.text(46, 128, "BUNNY")
         lcd.setTextColor(GREY, DARK)
         lcd.text(46, 138, "15-40 km/h")
 
     else:
         draw_lion(20, 134)
         lcd.setTextColor(TEAL_LT, DARK)
-        lcd.text(46, 128, "Lion")
+        lcd.text(46, 128, "LION")
         lcd.setTextColor(GREY, DARK)
         lcd.text(46, 138, "> 40 km/h")
 
