@@ -12,12 +12,11 @@ WHITE   = 0xFFFFFF
 RED     = 0xFF4444
 
 def draw_speed_icon(speed):
-    # Efface la zone icone
     lcd.fillRect(0, 118, 320, 32, DARK)
     lcd.font(lcd.FONT_DefaultSmall)
     
     if speed < 15:
-        # Tortue — cercle avec 4 pattes
+        # Turtle drawing
         lcd.fillCircle(20, 134, 10, TEAL)
         lcd.fillCircle(20, 134, 6, DARK)
         lcd.fillCircle(20, 128, 5, TEAL)
@@ -26,23 +25,23 @@ def draw_speed_icon(speed):
         lcd.fillRect(22, 138, 4, 6, TEAL)
         lcd.fillRect(28, 138, 4, 6, TEAL)
         lcd.setTextColor(TEAL_LT, DARK)
-        lcd.text(46, 128, "TORTUE")
+        lcd.text(46, 128, "Turtle")
         lcd.setTextColor(GREY, DARK)
         lcd.text(46, 138, "< 15 km/h")
 
     elif speed < 40:
-        # Lapin — corps ovale + oreilles
+        # Bunny drawing
         lcd.fillCircle(20, 136, 8, TEAL)
         lcd.fillCircle(20, 126, 5, TEAL)
         lcd.fillRect(14, 112, 4, 12, TEAL)
         lcd.fillRect(22, 112, 4, 12, TEAL)
         lcd.setTextColor(TEAL_LT, DARK)
-        lcd.text(46, 128, "LAPIN")
+        lcd.text(46, 128, "Bunny")
         lcd.setTextColor(GREY, DARK)
         lcd.text(46, 138, "15-40 km/h")
 
     else:
-        # Cheetah
+        # Cheetah drawing
         lcd.fillTriangle(6, 134, 20, 122, 20, 146, TEAL)
         lcd.fillTriangle(18, 134, 32, 122, 32, 146, TEAL_LT)
         lcd.fillRect(30, 132, 8, 4, WHITE)
@@ -61,18 +60,21 @@ def init_screen():
     lcd.fillRect(252, 4, 64, 20, TEAL)
     lcd.font(lcd.FONT_Default)
     lcd.setTextColor(WHITE, TEAL)
-    lcd.text(257, 9, "WiFi OK")
     lcd.fillRect(0, 28, 320, 2, PURPLE)
 
 def update_display(speed, lat, lon, has_fix, lora_ok=False):
-    status_col = TEAL_LT if has_fix else RED
+    gps_col  = TEAL_LT if has_fix else RED
+    
+    lora_col = TEAL_LT if lora_ok else RED
+
     lcd.fillRect(0, 32, 320, 18, DARK)
     lcd.font(lcd.FONT_Default)
-    lcd.setTextColor(status_col, DARK)
+
+    lcd.setTextColor(gps_col, DARK)
     lcd.text(6, 36, "GPS: LOCKED" if has_fix else "GPS: SEARCHING")
-    if has_fix:
-        lcd.setTextColor(GREY, DARK)
-        lcd.text(130, 36, "{:.4f},{:.4f}".format(lat, lon))
+
+    lcd.setTextColor(lora_col, DARK)
+    lcd.text(200, 36, "LoRa: OK" if lora_ok else "LoRa: NO TX")
     lcd.fillRect(0, 52, 320, 100, DARK)
     lcd.font(lcd.FONT_DefaultSmall)
     lcd.setTextColor(GREY, DARK)
@@ -82,7 +84,7 @@ def update_display(speed, lat, lon, has_fix, lora_ok=False):
     lcd.text(55, 65, "{:.1f}".format(speed))
     lcd.font(lcd.FONT_DejaVu18)
     lcd.setTextColor(GREY, DARK)
-    lcd.text(238, 108, "km/h")
+    lcd.text(238, 90, "km/h")
     draw_speed_icon(speed)
     lcd.fillRect(0, 155, 320, 1, BAR)
     lcd.fillRect(0, 156, 320, 50, DARK)
@@ -90,18 +92,11 @@ def update_display(speed, lat, lon, has_fix, lora_ok=False):
     lcd.setTextColor(GREY, DARK)
     lcd.text(12, 160, "LAT")
     lcd.text(118, 160, "LON")
-    lcd.text(228, 160, "LoRa")
+    
     lcd.setTextColor(TEAL_LT, DARK)
     lcd.text(6, 177, "{:.4f}".format(lat) if has_fix else "---")
     lcd.text(112, 177, "{:.4f}".format(lon) if has_fix else "---")
-    if lora_ok:
-        lcd.fillRect(220, 175, 64, 20, TEAL)
-        lcd.setTextColor(WHITE, TEAL)
-        lcd.text(226, 180, "TX OK")
-    else:
-        lcd.fillRect(220, 175, 64, 20, DARK)
-        lcd.setTextColor(RED, DARK)
-        lcd.text(226, 180, "NO TX")
+  
     lcd.fillRect(0, 207, 320, 1, BAR)
     lcd.fillRect(0, 208, 320, 14, BAR)
     lcd.font(lcd.FONT_DefaultSmall)
