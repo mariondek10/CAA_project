@@ -8,12 +8,12 @@ import os
 import hashlib
 from google.cloud import bigquery
 import db_dtypes
-if os.path.exists("../../caabikeproject-ee4a905a2516.json"):
-    key_path = "../../caabikeproject-ee4a905a2516.json"
-else:
-    key_path = r"C:\Users\marin\bike_project\caabikeproject-ee4a905a2516.json"
+#if os.path.exists("../../caabikeproject-ee4a905a2516.json"):
+ #   key_path = "../../caabikeproject-ee4a905a2516.json"
+#else:
+  #  key_path = r"C:\Users\marin\bike_project\caabikeproject-ee4a905a2516.json"
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
 PROJECT_NAME = "caabikeproject"
 
 TABLE = f"{PROJECT_NAME}.BikeProject.geo_data"
