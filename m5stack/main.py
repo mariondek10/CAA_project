@@ -4,6 +4,12 @@ import time
 import sensor
 import ui_interface
 from machine import UART
+import network
+import urequests
+import ujson
+import time
+from gps import GPS  # ton module GPS existant
+
 
 # # Configuration
 # lora = UART(1, baudrate=115200, rx=13, tx=14)
@@ -51,3 +57,46 @@ while True:
     
 #     # Pause de 60 secondes pour respecter la législation (Duty Cycle)
 #     time.sleep(60)
+
+# Lié à Flask 
+
+# ---- Config ----
+FLASK_URL = "http://<IP_DE_TON_PC>:8080/send-to-bigquery"
+PASSWORD  = "M&M's"
+SESSION_ID = 1  # incrémente à chaque sortie
+
+def get_timestamp():
+    t = time.localtime()
+    return "{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(
+        t[0], t[1], t[2], t[3], t[4], t[5]
+    )
+
+def send_data(lat, lon, speed, session_id):
+    payload = {
+        "passwd": PASSWORD,
+        "values": {
+            "latitude":   lat,
+            "longitude":  lon,
+            "timestamp":  get_timestamp(),
+            "speed":      speed,
+            "session_id": session_id
+        }
+    }
+    try:
+        r = urequests.post(
+            FLASK_URL,
+            data=ujson.dumps(payload),
+            headers={"Content-Type": "application/json"},
+            timeout=5
+        )
+        print("Réponse:", r.text)
+        r.close()
+    except Exception as e:
+        print("Erreur envoi:", e)
+
+# ---- Boucle principale ----
+while True:
+    lat, lon, speed = gps.get_data()  # ta fonction existante
+    if lat is not None:
+        send_data(lat, lon, speed, SESSION_ID)
+    time.sleep(5)  # envoie toutes les 5 secondes
