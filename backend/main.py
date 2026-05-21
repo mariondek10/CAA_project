@@ -24,46 +24,37 @@ SELECT * FROM `caabikeproject.BikeProject.weather-records` LIMIT 10
 query_job = client.query(q)
 df = query_job.to_dataframe()
 #%%
+
 @app.route('/send-to-bigquery', methods=['GET', 'POST'])
 def send_to_bigquery():
     if request.method == 'POST':
-        if request.get_json(force=True)["passwd"] != YOUR_HASH_PASSWD:
-            raise Exception("Incorrect Password!")
-        data = request.get_json(force=True)["values"]
-        # For exercise 2: Call the openweatherapi and add the resulting 
-        # values to the `data` dictionary
-        # data["outdoor_temp"] = ...
-        # data["outdoor_humidity"] = ...
-        # data["weather"] = ...
-        # building the query
-        q = """INSERT INTO `caabikeproject.BikeProject.geo_data` 
-        """
-        names = """"""
-        values = """"""
-        for k, v in data.items():
-            names += f"""{k},"""
-            if df.dtypes[k] == float:
-                values += f"""{v},"""
-            else:
-                # string values in the query should be in single qutation!
-                values += f"""'{v}',"""
-        # remove the last comma
-        names = names[:-1]
-        values = values[:-1]
-        q = q + f""" ({names})""" + f""" VALUES({values})"""
-        query_job = client.query(q)
-        return {"status": "sucess", "data": data}
-    return {"status": "failed"}
+        body = request.get_json(force=True)
         
+        if body["passwd"] != YOUR_HASH_PASSWD:
+            return {"status": "failed", "reason": "Incorrect Password!"}, 401
+        
+        data = body["values"]
+        # Champs FLOAT dans geo_data
+        float_fields = {"latitude", "longitude", "speed"}
+        # session_id est INTEGER, timestamp est STRING ISO 8601
 
-# For exercise 3: Complete the following endpoint.
-# @app.route('/get_outdoor_weather', methods=['GET', 'POST'])
-# def get_outdoor_weather():
-#     if request.method == 'POST':
-#         if request.get_json(force=True)["passwd"] != YOUR_HASH_PASSWD:
-#             raise Exception("Incorrect Password!")
-#         # get the latest outdoor temp values from the db
+        names = ", ".join(data.keys())
+        values_parts = []
+        for k, v in data.items():
+            if k in float_fields:
+                values_parts.append(str(float(v)))
+            elif k == "session_id":
+                values_parts.append(str(int(v)))
+            else:
+                # timestamp et autres strings
+                values_parts.append(f"'{v}'")
+        values = ", ".join(values_parts)
 
+        q = f"INSERT INTO `caabikeproject.BikeProject.geo_data` ({names}) VALUES ({values})"
+        client.query(q)
+        return {"status": "success", "data": data}
+    
+    return {"status": "failed"}
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
