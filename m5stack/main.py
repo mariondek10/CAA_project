@@ -1,3 +1,146 @@
+## Imports 
+import time
+import sensor
+import ui_interface
+import network
+import urequests
+import ujson
+from m5stack import touch 
+
+## Wifi connexion
+
+WIFI_SSID = "iPhone (48)"  
+WIFI_PASS = "09651234"          
+
+## Link with the m5stack boot
+def connect_wifi(ssid, password):
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    if not wlan.isconnected():
+        print("Connecting to {}...".format(ssid))
+        wlan.connect(ssid, password)
+        timeout = 10
+        while not wlan.isconnected() and timeout > 0:
+            time.sleep(1)
+            timeout -= 1
+    return wlan.isconnected()
+
+def run_wifi_interactive_config():
+    """ Handles the interactive Wi-Fi configuration at startup if the user touches the screen """
+    ui_interface.show_config_prompt()
+    
+    ## Wait for 5 seconds to detect a touch on the screen to enter Wi-Fi config mode
+    start_time = time.time()
+    touch_detected = False
+    
+    while time.time() - start_time < 5:
+        if touch.status(): # Si un doigt touche l'écran
+            touch_detected = True
+            break
+        time.sleep(0.1)
+        
+    if touch_detected:
+        print("Scan mode activated!")
+        wlan = network.WLAN(network.STA_IF)
+        wlan.active(True)
+        
+        networks_found = []
+        try:
+            scan_results = wlan.scan()
+            networks_found = [res[0].decode('utf-8') for res in scan_results if res[0]]
+        except Exception:
+            networks_found = ["iPhone (48)", "UNIL-Campus", "EPFL-Guest"]
+            
+        ui_interface.show_wifi_menu(networks_found)
+        time.sleep(4) 
+        
+    ui_interface.show_connecting_screen(WIFI_SSID)
+    
+    connect_wifi(WIFI_SSID, WIFI_PASS)
+
+## Start the UI with a boot screen while connecting to Wi-Fi in the background
+ui_interface.show_boot_screen()
+time.sleep(1.5)
+
+run_wifi_interactive_config()
+
+ui_interface.init_screen()
+
+## Backend configuration
+FLASK_URL = "https://bike-backend-387007830650.europe-west6.run.app/send-to-bigquery"
+PASSWORD  = "M&M's"
+SESSION_FILE = "session.txt"
+
+## Increment the session ID at each startup to differentiate sessions in the BigQuery table
+def get_and_increment_session():
+    try:
+        with open(SESSION_FILE, "r") as f:
+            current_session = int(f.read().strip())
+    except Exception:
+        current_session = 0
+    new_session = current_session + 1
+    try:
+        with open(SESSION_FILE, "w") as f:
+            f.write(str(new_session))
+    except Exception:
+        pass
+    return new_session
+
+SESSION_ID = get_and_increment_session()
+buffer = []
+
+## Function to check Wi-Fi connection and send data to the backend
+def is_connected():
+    wlan = network.WLAN(network.STA_IF)
+    return wlan.isconnected()
+
+## Send the data to the Flask app
+def send_data(lat, lon, speed, session_id):
+    payload = {
+        "passwd": PASSWORD,
+        "values": {
+            "latitude":   lat,
+            "longitude":  lon,
+            "speed":      speed,
+            "session_id": session_id
+        }
+    }
+    try:
+        r = urequests.post(FLASK_URL, data=ujson.dumps(payload), headers={"Content-Type": "application/json"})
+        r.close()
+        return True
+    except Exception:
+        return False
+
+## Main loop 
+while True:
+    fix = sensor.read_gps()
+    wifi_status = is_connected()
+    
+    if fix is not None:
+        lat, lon, speed = fix
+        if speed < 5.0: speed = 0.0
+        buffer.append((lat, lon, speed))
+        gps_active = True
+    else:
+        lat, lon, speed = 0.0, 0.0, 0.0
+        gps_active = False
+
+    success_envoi = False
+    if wifi_status and buffer:
+        for point in buffer[:]:
+            b_lat, b_lon, b_speed = point
+            success_envoi = send_data(b_lat, b_lon, b_speed, SESSION_ID)
+            if success_envoi:
+                buffer.remove(point)
+            time.sleep(0.2)
+
+    ui_interface.update_display(speed, lat, lon, gps_active, wifi_status)
+    time.sleep(5)
+
+
+## --------------------------------------------------------------------------------
+## The following commented code is the original test we made with the LoRa module
 # import struct
 # from tomlkit import datetime
 # import ubinascii
@@ -106,147 +249,3 @@
 # #     # Pause de 60 secondes pour respecter la législation (Duty Cycle)
 # #     time.sleep(60)
 
-# # Lié à Flask 
-
-# # ---- Config ----
-
-
-
-
-
-
-# # ---- Boucle principale ----
-
-import time
-import sensor
-import ui_interface
-import network
-import urequests
-import ujson
-from m5stack import touch # Import indispensable pour le tactile du Core2
-
-# ---- IDENTIFIANTS PAR DÉFAUT ----
-WIFI_SSID = "iPhone (48)"  
-WIFI_PASS = "09651234"          
-
-def connect_wifi(ssid, password):
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    if not wlan.isconnected():
-        print("Connecting to {}...".format(ssid))
-        wlan.connect(ssid, password)
-        timeout = 10
-        while not wlan.isconnected() and timeout > 0:
-            time.sleep(1)
-            timeout -= 1
-    return wlan.isconnected()
-
-def run_wifi_interactive_config():
-    """ Gère le choix du Wi-Fi au démarrage via l'écran tactile """
-    ui_interface.show_config_prompt()
-    
-    # On attend 5 secondes pour voir si l'utilisateur touche l'écran
-    start_time = time.time()
-    touch_detected = False
-    
-    while time.time() - start_time < 5:
-        if touch.status(): # Si un doigt touche l'écran
-            touch_detected = True
-            break
-        time.sleep(0.1)
-        
-    if touch_detected:
-        print("Scan mode activated!")
-        wlan = network.WLAN(network.STA_IF)
-        wlan.active(True)
-        
-        networks_found = []
-        try:
-            scan_results = wlan.scan()
-            networks_found = [res[0].decode('utf-8') for res in scan_results if res[0]]
-        except Exception:
-            networks_found = ["iPhone (48)", "UNIL-Campus", "EPFL-Guest"]
-            
-        ui_interface.show_wifi_menu(networks_found)
-        time.sleep(4) 
-        
-    ui_interface.show_connecting_screen(WIFI_SSID)
-    
-    connect_wifi(WIFI_SSID, WIFI_PASS)
-
-# ---- SEQUENCE DE DEMARRAGE ----
-ui_interface.show_boot_screen()
-time.sleep(1.5)
-
-run_wifi_interactive_config()
-
-ui_interface.init_screen()
-
-# ---- CONFIGURATION CLOUD BACKEND ----
-FLASK_URL = "https://bike-backend-387007830650.europe-west6.run.app/send-to-bigquery"
-PASSWORD  = "M&M's"
-SESSION_FILE = "session.txt"
-
-def get_and_increment_session():
-    try:
-        with open(SESSION_FILE, "r") as f:
-            current_session = int(f.read().strip())
-    except Exception:
-        current_session = 0
-    new_session = current_session + 1
-    try:
-        with open(SESSION_FILE, "w") as f:
-            f.write(str(new_session))
-    except Exception:
-        pass
-    return new_session
-
-SESSION_ID = get_and_increment_session()
-buffer = []
-
-def is_connected():
-    wlan = network.WLAN(network.STA_IF)
-    return wlan.isconnected()
-
-def send_data(lat, lon, speed, session_id):
-    payload = {
-        "passwd": PASSWORD,
-        "values": {
-            "latitude":   lat,
-            "longitude":  lon,
-            "speed":      speed,
-            "session_id": session_id
-        }
-    }
-    try:
-        r = urequests.post(FLASK_URL, data=ujson.dumps(payload), headers={"Content-Type": "application/json"})
-        r.close()
-        return True
-    except Exception:
-        return False
-
-# ---- BOUCLE PRINCIPALE ----
-while True:
-    fix = sensor.read_gps()
-    wifi_status = is_connected()
-    
-    if fix is not None:
-        lat, lon, speed = fix
-        if speed < 5.0: speed = 0.0
-        buffer.append((lat, lon, speed))
-        gps_active = True
-    else:
-        lat, lon, speed = 0.0, 0.0, 0.0
-        gps_active = False
-
-    success_envoi = False
-    if wifi_status and buffer:
-        for point in buffer[:]:
-            b_lat, b_lon, b_speed = point
-            success_envoi = send_data(b_lat, b_lon, b_speed, SESSION_ID)
-            if success_envoi:
-                buffer.remove(point)
-            time.sleep(0.2)
-
-    ui_interface.update_display(speed, lat, lon, gps_active, wifi_status)
-    time.sleep(5)

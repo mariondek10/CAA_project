@@ -11,7 +11,8 @@ import db_dtypes
 import json
 from google.cloud import secretmanager
 from google.oauth2 import service_account
-# Accesses for local testing
+
+## Accesses for local testing
 #if os.path.exists("../../caabikeproject-ee4a905a2516.json"):
  #   key_path = "../../caabikeproject-ee4a905a2516.json"
 #else:
@@ -19,7 +20,8 @@ from google.oauth2 import service_account
 
 # os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
 
-# Credentials for Cloud Run (using Secret Manager)
+## Credentials for Cloud Run (using Secret Manager)
+
 def get_bigquery_client():
     sm = secretmanager.SecretManagerServiceClient()
     # Utilise ton vrai nom de secret et ton project number
@@ -42,7 +44,8 @@ st.set_page_config(
     layout="wide",
 )
  
-# ── Custom CSS ────────────────────────────────────────────────────────────────
+# Custom CSS 
+
 st.markdown("""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
@@ -90,22 +93,23 @@ st.markdown("""
 """, unsafe_allow_html=True)
  
  
-# BigQuery helpers
 @st.cache_resource
 def get_client():
     return bigquery.Client(project=PROJECT_NAME)
  
- 
+## Data access functions 
 def run_query(sql: str) -> pd.DataFrame:
     return get_client().query(sql).to_dataframe()
  
- 
+
+## Cached queries for session list and session data 
 @st.cache_data(ttl=300)
 def get_sessions() -> list[int]:
     df = run_query(f"SELECT DISTINCT session_id FROM `{TABLE}` ORDER BY session_id DESC")
     return df["session_id"].tolist()
  
- 
+
+## Cache session data for 5 minutes to speed up UI interactions when re-selecting sessions 
 @st.cache_data(ttl=300)
 def get_session_data(session_id: int) -> pd.DataFrame:
     return run_query(f"""
@@ -115,7 +119,8 @@ def get_session_data(session_id: int) -> pd.DataFrame:
         ORDER BY timestamp ASC
     """)
  
- 
+
+## Data processing functions (speed zones, distance calculation, duration formatting) 
 def haversine_series(df: pd.DataFrame) -> float:
     """Total distance in km using the Haversine formula."""
     R = 6371
@@ -126,7 +131,8 @@ def haversine_series(df: pd.DataFrame) -> float:
     a = np.sin(dlat / 2) ** 2 + np.cos(lat[:-1]) * np.cos(lat[1:]) * np.sin(dlon / 2) ** 2
     return float(np.sum(2 * R * np.arcsin(np.sqrt(a))))
  
- 
+
+## Format duration as "Xm Ys" or "Xh Ym" 
 def duration_str(df: pd.DataFrame) -> str:
     ts = pd.to_datetime(df["timestamp"])
     delta = ts.max() - ts.min()
@@ -137,7 +143,8 @@ def duration_str(df: pd.DataFrame) -> str:
         return f"{h}h {m:02d}m"
     return f"{m}m {s:02d}s"
  
- 
+
+## Classify speed samples into zones (km/h) with the same emojis as the m5stack display for fun :) 
 def speed_zone_distribution(df: pd.DataFrame) -> dict:
     """Classify speed samples into zones (km/h)."""
     spd = df["speed"].dropna()
@@ -212,7 +219,7 @@ st.map(map_df, size=4, color="#60a5fa")
 # Speed chart 
 st.markdown('<div class="section-title">⚡ Speed over time</div>', unsafe_allow_html=True)
 speed_df = df[["timestamp", "speed"]].dropna().set_index("timestamp")
-st.line_chart(speed_df, color="#60a5fa")
+st.line_chart(speed_df, color="#185a28")
  
 # Speed zone distribution 
 st.markdown('<div class="section-title">🏷 Speed zone distribution</div>', unsafe_allow_html=True)
@@ -232,7 +239,7 @@ st.dataframe(
     use_container_width=True,
 )
  
-# Pace analysis 
+# Pace analysis with speed zones and distance by zone thanks to SQL query
 st.markdown('<div class="section-title">📊 All-session overview</div>', unsafe_allow_html=True)
  
 @st.cache_data(ttl=300)
@@ -264,7 +271,7 @@ st.dataframe(
     use_container_width=True,
 )
  
-# Raw data expander
+# Raw data expander to have the replication of the BigQuery table view for each session
 with st.expander("🔍 Raw session data"):
     st.dataframe(df, use_container_width=True)
  

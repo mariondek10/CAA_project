@@ -15,7 +15,7 @@ ORANGE_DARK = 0xBA7517
 BEIGE       = 0xF5C4B3 
 BLACK       = 0x000000
 
-# Drawings functions 
+## Turtle drawing function
 def draw_turtle(x, y):
     lcd.fillCircle(x, y, 12, TEAL)
     lcd.fillCircle(x-5, y, 10, TEAL)
@@ -35,13 +35,16 @@ def draw_turtle(x, y):
     lcd.fillCircle(x-13, y+7, 4, TEAL)  
     lcd.fillCircle(x+13, y+7, 4, TEAL)  
     lcd.fillCircle(x, y+16, 3, TEAL)
-    
+
+## Bunny drawing function    
 def draw_bunny(x, y):
     lcd.fillCircle(x, 136, 8, TEAL)
     lcd.fillCircle(x, 126, 5, TEAL)
     lcd.fillRect(x-6, y-12, 4, 12, TEAL)
     lcd.fillRect(x+2, y-12, 4, 12, TEAL)
 
+
+## Lion drawing function
 def draw_lion(x, y):
     lcd.fillCircle(x,    y,    13, ORANGE_DARK)
     lcd.fillCircle(x-10, y-7,   6, ORANGE_DARK)
@@ -72,6 +75,8 @@ def draw_lion(x, y):
     lcd.fillCircle(x+6, y+4, 1, BLACK)
     lcd.fillCircle(x+9, y+3, 1, BLACK)
 
+
+## Update the display with current speed, GPS status, Wi-Fi status and drawing corresponding 
 def draw_speed_icon(speed):
     lcd.fillRect(0, 118, 320, 32, DARK)
     lcd.font(lcd.FONT_DefaultSmall)
@@ -94,6 +99,7 @@ def draw_speed_icon(speed):
         lcd.setTextColor(GREY, DARK)
         lcd.text(46, 138, "> 25 km/h")
 
+## Initialize the screen with title and separators
 def init_screen():
     lcd.clear()
     lcd.fillScreen(BG)
@@ -105,6 +111,8 @@ def init_screen():
     lcd.setTextColor(WHITE, TEAL)
     lcd.fillRect(0, 28, 320, 2, PURPLE)
 
+
+## Main function to update the display with current speed, GPS status, Wi-Fi status and drawing corresponding icons
 def update_display(speed, lat, lon, has_fix, wifi_ok=False):
     gps_col  = TEAL_LT if has_fix else RED
     wifi_col = TEAL_LT if wifi_ok else RED
@@ -166,7 +174,7 @@ def show_config_prompt():
     lcd.setTextColor(WHITE, BG)
     lcd.text(40, 60, "CONFIGURE WI-FI?")
     
-    # Bouton tactile
+    
     lcd.fillRect(40, 110, 240, 50, PURPLE)
     lcd.setTextColor(WHITE, PURPLE)
     lcd.text(55, 125, "Touch screen to change")

@@ -4,10 +4,11 @@ import time
 TX_PIN = 14
 RX_PIN = 13
 
+## Parse the GNRMC sentence to extract latitude, longitude and speed
 def parse_gnrmc(sentence):
     try:
         parts = sentence.strip().split(',')
-        if len(parts) < 8 or parts[2] != 'A': # On vérifie qu'on a assez de colonnes
+        if len(parts) < 8 or parts[2] != 'A': 
             return None
         if not (parts[0] in ('$GNRMC', '$GPRMC')):
             return None
@@ -18,14 +19,15 @@ def parse_gnrmc(sentence):
         lon = float(parts[5][:3]) + float(parts[5][3:]) / 60
         if parts[6] == 'W': lon = -lon
         
-        # Récupération de la vitesse (parts[7] est en nœuds)
+        
         speed_knots = float(parts[7]) if parts[7] else 0.0
-        speed_kmh = speed_knots * 1.852 # Conversion nœuds -> km/h
+        speed_kmh = speed_knots * 1.852 
         
         return lat, lon, speed_kmh 
     except:
         return None
 
+## Read GPS data from the UART and parse it, with a timeout
 def read_gps(timeout_ms=1000):
     uart = UART(2, baudrate=9600, tx=TX_PIN, rx=RX_PIN, timeout=500)
     fix = None
@@ -45,6 +47,8 @@ def read_gps(timeout_ms=1000):
     uart.deinit()
     return fix
 
+
+## Main loop to read GPS, check Wi-Fi and send data to backend, while updating the UI
 def run_loop():
     print("Lancement GPS...")
     while True:
