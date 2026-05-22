@@ -8,12 +8,28 @@ import os
 import hashlib
 from google.cloud import bigquery
 import db_dtypes
+import json
+from google.cloud import secretmanager
+from google.oauth2 import service_account
 #if os.path.exists("../../caabikeproject-ee4a905a2516.json"):
  #   key_path = "../../caabikeproject-ee4a905a2516.json"
 #else:
   #  key_path = r"C:\Users\marin\bike_project\caabikeproject-ee4a905a2516.json"
 
 # os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
+
+def get_bigquery_client():
+    sm = secretmanager.SecretManagerServiceClient()
+    # Utilise ton vrai nom de secret et ton project number
+    name = "projects/387007830650/secrets/key-bikeProject/versions/latest"
+    response = sm.access_secret_version(request={"name": name})
+    key_dict = json.loads(response.payload.data.decode("UTF-8"))
+    
+    credentials = service_account.Credentials.from_service_account_info(key_dict)
+    return bigquery.Client(project="caabikeproject", credentials=credentials)
+
+client = get_bigquery_client()
+
 PROJECT_NAME = "caabikeproject"
 
 TABLE = f"{PROJECT_NAME}.BikeProject.geo_data"
