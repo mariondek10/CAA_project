@@ -8,6 +8,9 @@ import os
 import hashlib
 from google.cloud import bigquery
 import db_dtypes
+import json
+from google.cloud import secretmanager
+from google.oauth2 import service_account
 #if os.path.exists("../../caabikeproject-ee4a905a2516.json"):
  #   key_path = "../../caabikeproject-ee4a905a2516.json"
 #else:
