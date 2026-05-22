@@ -5,3 +5,5 @@ numpy
 requests
 google-cloud-bigquery
 db-dtypes
+google-cloud-secret-manager
+google-auth
