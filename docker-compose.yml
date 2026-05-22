@@ -6,6 +6,5 @@ services:
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/key.json
     volumes:
-      # Monte ton fichier de clé GCP dans le container (jamais copié dans l'image !)
       - ./secrets/key.json:/app/secrets/key.json:ro
     restart: unless-stopped
