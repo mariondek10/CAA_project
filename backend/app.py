@@ -33,13 +33,6 @@ YOUR_HASH_PASSWD = "M&M's" # YOUR_HASH_PASSWD
 
 app = Flask(__name__)
 
-# get the column names of the db
-q = """
-SELECT * FROM `caabikeproject.BikeProject.geo_data` LIMIT 10
-"""
-query_job = client.query(q)
-df = query_job.to_dataframe()
-#%%
 
 @app.route('/send-to-bigquery', methods=['GET', 'POST'])
 def send_to_bigquery():
