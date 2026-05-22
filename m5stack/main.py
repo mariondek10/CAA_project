@@ -132,7 +132,7 @@ ui_interface.init_screen()
 print("Démarrage du système...")
 
 # ---- CONFIGURATION ----
-FLASK_URL = "http://172.20.10.2:8080/send-to-bigquery"
+FLASK_URL = "https://bike-backend-387007830650.europe-west6.run.app"
 PASSWORD  = "M&M's"
 
 # ---- GESTION AUTOMATIQUE DE LA SESSION (Fichier local) ----
