@@ -21,7 +21,7 @@ app = Flask(__name__)
 
 # get the column names of the db
 q = """
-SELECT * FROM `caabikeproject.BikeProject.weather-records` LIMIT 10
+SELECT * FROM `caabikeproject.BikeProject.geo_data` LIMIT 10
 """
 query_job = client.query(q)
 df = query_job.to_dataframe()
@@ -38,7 +38,7 @@ def send_to_bigquery():
         data = body["values"]
         # Champs FLOAT dans geo_data
         float_fields = {"latitude", "longitude", "speed"}
-        # session_id est INTEGER, timestamp est STRING ISO 8601
+        data["timestamp"] = datetime.utcnow().isoformat()
 
         names = ", ".join(data.keys())
         values_parts = []
@@ -48,9 +48,14 @@ def send_to_bigquery():
             elif k == "session_id":
                 values_parts.append(str(int(v)))
             else:
-                # timestamp et autres strings
-                values_parts.append(f"'{v}'")
+                # Si c'est le timestamp, on ajoute le mot-clé TIMESTAMP pour BigQuery
+                if k == "timestamp":
+                    values_parts.append(f"TIMESTAMP('{v}')")
+                else:
+                    # Pour les autres strings classiques s'il y en a
+                    values_parts.append(f"'{v}'")
         values = ", ".join(values_parts)
+                
 
         q = f"INSERT INTO `caabikeproject.BikeProject.geo_data` ({names}) VALUES ({values})"
         client.query(q)

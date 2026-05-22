@@ -128,14 +128,40 @@ import urequests
 import ujson
 
 # # --- DÉMARRAGE DE L'ÉCRAN ---
-# On le met TOUT EN HAUT pour qu'il s'affiche dès le démarrage !
 ui_interface.init_screen()
 print("Démarrage du système...")
 
 # ---- CONFIGURATION ----
-FLASK_URL = "http://192.168.1.176:8080/send-to-bigquery"
+FLASK_URL = "http://172.20.10.2:8080/send-to-bigquery"
 PASSWORD  = "M&M's"
-SESSION_ID = 1  # incrémente à chaque sortie
+
+# ---- GESTION AUTOMATIQUE DE LA SESSION (Fichier local) ----
+SESSION_FILE = "session.txt"
+
+def get_and_increment_session():
+    try:
+        # 1. Essayer de lire la dernière session
+        with open(SESSION_FILE, "r") as f:
+            current_session = int(f.read().strip())
+    except Exception:
+        # Si le fichier n'existe pas encore, on commence à 0
+        current_session = 0
+    
+    # 2. Incrémenter pour la sortie actuelle
+    new_session = current_session + 1
+    
+    # 3. Sauvegarder le nouveau numéro dans la mémoire de la carte
+    try:
+        with open(SESSION_FILE, "w") as f:
+            f.write(str(new_session))
+    except Exception as e:
+        print("Erreur écriture session.txt:", e)
+        
+    return new_session
+
+# Récupération de l'ID unique de cette sortie
+SESSION_ID = get_and_increment_session()
+print("=== SESSION EN COURS : #{} ===".format(SESSION_ID))
 
 buffer = []
 
@@ -157,8 +183,7 @@ def send_data(lat, lon, speed, session_id):
         r = urequests.post(
             FLASK_URL,
             data=ujson.dumps(payload),
-            headers={"Content-Type": "application/json"},
-            timeout=5
+            headers={"Content-Type": "application/json"}
         )
         print("Réponse Flask:", r.text)
         r.close()
@@ -167,47 +192,35 @@ def send_data(lat, lon, speed, session_id):
         print("Erreur envoi Flask:", e)
         return False
 
-# Vérification Wi-Fi initiale
 if not is_connected():
-    print("Pas de Wi-Fi, les données seront mises en mémoire tampon...")
+    print("Pas de Wi-Fi, stockage en mémoire tampon activé.")
 
-# ---- UNE SEULE BOUCLE PRINCIPALE PROPRE ----
+# ---- BOUCLE PRINCIPALE ----
 while True:
-    # On récupère le résultat brut du GPS
     fix = sensor.read_gps()
     
-    # ÉVITE LE PLANTAGE : On vérifie si le fix existe avant de le déballer
     if fix is not None:
         lat, lon, speed = fix
-        
-        # Ton petit filtre de vitesse
-        if speed < 2.0: 
+        if speed < 5.0: 
             speed = 0.0
             
         print("GPS OK: {:.6f}, {:.6f} | Vitesse: {:.1f} km/h".format(lat, lon, speed))
-        
-        # On ajoute la position dans ton buffer de sauvegarde
         buffer.append((lat, lon, speed))
         gps_active = True
     else:
-        # Si le GPS n'a pas de signal (fix est None)
-        print("En attente de signal GPS (Pas de fix satellites)...")
+        print("En attente de signal GPS...")
         lat, lon, speed = 0.0, 0.0, 0.0
         gps_active = False
 
-    # Gestion de l'envoi du buffer si le Wi-Fi est là
     success_envoi = False
     if is_connected() and buffer:
-        print("[Wi-Fi] Envoi du buffer à Flask...")
-        for point in buffer[:]:  # copie pour itérer proprement
+        print("[Wi-Fi] Envoi de {} points en mémoire...".format(len(buffer)))
+        for point in buffer[:]:
             b_lat, b_lon, b_speed = point
             success_envoi = send_data(b_lat, b_lon, b_speed, SESSION_ID)
             if success_envoi:
                 buffer.remove(point)
-            time.sleep(0.2)  # évite de spammer Flask
+            time.sleep(0.2)
 
-    # Mise à jour de ton interface avec le statut réel !
     ui_interface.update_display(speed, lat, lon, gps_active, success_envoi)
-    
-    # Pause de 5 secondes avant le prochain relevé
     time.sleep(5)
