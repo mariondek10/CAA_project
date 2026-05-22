@@ -117,52 +117,91 @@
 
 # # ---- Boucle principale ----
 
-import struct
-import ubinascii
 import time
 import sensor
 import ui_interface
-from machine import UART
 import network
 import urequests
 import ujson
+from m5stack import touch # Import indispensable pour le tactile du Core2
 
-# # --- DÉMARRAGE DE L'ÉCRAN ---
+# ---- IDENTIFIANTS PAR DÉFAUT ----
+WIFI_SSID = "iPhone (48)"  
+WIFI_PASS = "09651234"          
+
+def connect_wifi(ssid, password):
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    if not wlan.isconnected():
+        print("Connecting to {}...".format(ssid))
+        wlan.connect(ssid, password)
+        timeout = 10
+        while not wlan.isconnected() and timeout > 0:
+            time.sleep(1)
+            timeout -= 1
+    return wlan.isconnected()
+
+def run_wifi_interactive_config():
+    """ Gère le choix du Wi-Fi au démarrage via l'écran tactile """
+    ui_interface.show_config_prompt()
+    
+    # On attend 5 secondes pour voir si l'utilisateur touche l'écran
+    start_time = time.time()
+    touch_detected = False
+    
+    while time.time() - start_time < 5:
+        if touch.status(): # Si un doigt touche l'écran
+            touch_detected = True
+            break
+        time.sleep(0.1)
+        
+    if touch_detected:
+        print("Scan mode activated!")
+        wlan = network.WLAN(network.STA_IF)
+        wlan.active(True)
+        
+        networks_found = []
+        try:
+            scan_results = wlan.scan()
+            networks_found = [res[0].decode('utf-8') for res in scan_results if res[0]]
+        except Exception:
+            networks_found = ["iPhone (48)", "UNIL-Campus", "EPFL-Guest"]
+            
+        ui_interface.show_wifi_menu(networks_found)
+        time.sleep(4) 
+        
+    ui_interface.show_connecting_screen(WIFI_SSID)
+    
+    connect_wifi(WIFI_SSID, WIFI_PASS)
+
+# ---- SEQUENCE DE DEMARRAGE ----
+ui_interface.show_boot_screen()
+time.sleep(1.5)
+
+run_wifi_interactive_config()
+
 ui_interface.init_screen()
-print("Démarrage du système...")
 
-# ---- CONFIGURATION ----
-FLASK_URL = "https://bike-backend-387007830650.europe-west6.run.app"
+# ---- CONFIGURATION CLOUD BACKEND ----
+FLASK_URL = "https://bike-backend-387007830650.europe-west6.run.app/send-to-bigquery"
 PASSWORD  = "M&M's"
-
-# ---- GESTION AUTOMATIQUE DE LA SESSION (Fichier local) ----
 SESSION_FILE = "session.txt"
 
 def get_and_increment_session():
     try:
-        # 1. Essayer de lire la dernière session
         with open(SESSION_FILE, "r") as f:
             current_session = int(f.read().strip())
     except Exception:
-        # Si le fichier n'existe pas encore, on commence à 0
         current_session = 0
-    
-    # 2. Incrémenter pour la sortie actuelle
     new_session = current_session + 1
-    
-    # 3. Sauvegarder le nouveau numéro dans la mémoire de la carte
     try:
         with open(SESSION_FILE, "w") as f:
             f.write(str(new_session))
-    except Exception as e:
-        print("Erreur écriture session.txt:", e)
-        
+    except Exception:
+        pass
     return new_session
 
-# Récupération de l'ID unique de cette sortie
 SESSION_ID = get_and_increment_session()
-print("=== SESSION EN COURS : #{} ===".format(SESSION_ID))
-
 buffer = []
 
 def is_connected():
@@ -180,41 +219,28 @@ def send_data(lat, lon, speed, session_id):
         }
     }
     try:
-        r = urequests.post(
-            FLASK_URL,
-            data=ujson.dumps(payload),
-            headers={"Content-Type": "application/json"}
-        )
-        print("Réponse Flask:", r.text)
+        r = urequests.post(FLASK_URL, data=ujson.dumps(payload), headers={"Content-Type": "application/json"})
         r.close()
         return True
-    except Exception as e:
-        print("Erreur envoi Flask:", e)
+    except Exception:
         return False
-
-if not is_connected():
-    print("Pas de Wi-Fi, stockage en mémoire tampon activé.")
 
 # ---- BOUCLE PRINCIPALE ----
 while True:
     fix = sensor.read_gps()
+    wifi_status = is_connected()
     
     if fix is not None:
         lat, lon, speed = fix
-        if speed < 5.0: 
-            speed = 0.0
-            
-        print("GPS OK: {:.6f}, {:.6f} | Vitesse: {:.1f} km/h".format(lat, lon, speed))
+        if speed < 5.0: speed = 0.0
         buffer.append((lat, lon, speed))
         gps_active = True
     else:
-        print("En attente de signal GPS...")
         lat, lon, speed = 0.0, 0.0, 0.0
         gps_active = False
 
     success_envoi = False
-    if is_connected() and buffer:
-        print("[Wi-Fi] Envoi de {} points en mémoire...".format(len(buffer)))
+    if wifi_status and buffer:
         for point in buffer[:]:
             b_lat, b_lon, b_speed = point
             success_envoi = send_data(b_lat, b_lon, b_speed, SESSION_ID)
@@ -222,5 +248,5 @@ while True:
                 buffer.remove(point)
             time.sleep(0.2)
 
-    ui_interface.update_display(speed, lat, lon, gps_active, success_envoi)
+    ui_interface.update_display(speed, lat, lon, gps_active, wifi_status)
     time.sleep(5)

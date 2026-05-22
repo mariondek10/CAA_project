@@ -15,7 +15,6 @@ ORANGE_DARK = 0xBA7517
 BEIGE       = 0xF5C4B3 
 BLACK       = 0x000000
 
-
 # Drawings functions 
 def draw_turtle(x, y):
     lcd.fillCircle(x, y, 12, TEAL)
@@ -44,7 +43,6 @@ def draw_bunny(x, y):
     lcd.fillRect(x+2, y-12, 4, 12, TEAL)
 
 def draw_lion(x, y):
-    
     lcd.fillCircle(x,    y,    13, ORANGE_DARK)
     lcd.fillCircle(x-10, y-7,   6, ORANGE_DARK)
     lcd.fillCircle(x+10, y-7,   6, ORANGE_DARK)
@@ -67,7 +65,6 @@ def draw_lion(x, y):
     lcd.fillCircle(x+2, y-3, 1, WHITE)
     
     lcd.fillCircle(x, y+4, 4, BEIGE)
-    
     lcd.fillCircle(x, y+2, 1, BLACK)
 
     lcd.fillCircle(x-6, y+4, 1, BLACK)
@@ -81,23 +78,21 @@ def draw_speed_icon(speed):
     
     if speed < 15:
         draw_turtle(20 ,134)
-        lcd.text(46, 128, "TURTLE")
+        lcd.text(46, 128, "TORTOISE")
         lcd.setTextColor(GREY, DARK)
         lcd.text(46, 138, "< 15 km/h")
-
-    elif speed < 40:
+    elif speed < 25:
         draw_bunny(20, 134)
         lcd.setTextColor(TEAL_LT, DARK)
         lcd.text(46, 128, "BUNNY")
         lcd.setTextColor(GREY, DARK)
-        lcd.text(46, 138, "15-40 km/h")
-
+        lcd.text(46, 138, "15-25 km/h")
     else:
         draw_lion(20, 134)
         lcd.setTextColor(TEAL_LT, DARK)
         lcd.text(46, 128, "LION")
         lcd.setTextColor(GREY, DARK)
-        lcd.text(46, 138, "> 40 km/h")
+        lcd.text(46, 138, "> 25 km/h")
 
 def init_screen():
     lcd.clear()
@@ -105,15 +100,14 @@ def init_screen():
     lcd.fillRect(0, 0, 320, 28, BAR)
     lcd.font(lcd.FONT_DejaVu18)
     lcd.setTextColor(PURPLE, BAR)
-    lcd.text(8, 6, "BIKE TRACKER")
+    lcd.text(8, 6, "SPEED TRACKER")
     lcd.font(lcd.FONT_Default)
     lcd.setTextColor(WHITE, TEAL)
     lcd.fillRect(0, 28, 320, 2, PURPLE)
 
-def update_display(speed, lat, lon, has_fix, lora_ok=False):
+def update_display(speed, lat, lon, has_fix, wifi_ok=False):
     gps_col  = TEAL_LT if has_fix else RED
-    
-    lora_col = TEAL_LT if lora_ok else RED
+    wifi_col = TEAL_LT if wifi_ok else RED
 
     lcd.fillRect(0, 32, 320, 18, DARK)
     lcd.font(lcd.FONT_Default)
@@ -121,8 +115,8 @@ def update_display(speed, lat, lon, has_fix, lora_ok=False):
     lcd.setTextColor(gps_col, DARK)
     lcd.text(6, 36, "GPS: LOCKED" if has_fix else "GPS: SEARCHING")
 
-    lcd.setTextColor(lora_col, DARK)
-    lcd.text(200, 36, "LoRa: OK" if lora_ok else "LoRa: NO TX")
+    lcd.setTextColor(wifi_col, DARK)
+    lcd.text(200, 36, "Wifi: OK" if wifi_ok else "Wifi: NO Connection")
     lcd.fillRect(0, 52, 320, 100, DARK)
     lcd.font(lcd.FONT_DefaultSmall)
     lcd.setTextColor(GREY, DARK)
@@ -164,9 +158,50 @@ def show_boot_screen():
     lcd.font(lcd.FONT_Default)
     lcd.setTextColor(GREY, BG)
     lcd.text(60, 145, "UNIL - CAA Project")
+    
+def show_config_prompt():
+     lcd.clear()
+    lcd.fillScreen(BG)
+    lcd.font(lcd.FONT_DejaVu18)
+    lcd.setTextColor(WHITE, BG)
+    lcd.text(40, 60, "CONFIGURE WI-FI?")
+    
+    # Bouton tactile
+    lcd.fillRect(40, 110, 240, 50, PURPLE)
+    lcd.setTextColor(WHITE, PURPLE)
+    lcd.text(55, 125, "Touch screen to change")
+    
+    lcd.font(lcd.FONT_DefaultSmall)
+    lcd.setTextColor(GREY, BG)
+    lcd.text(25, 190, "No action: Auto-connect in 5s...")
 
-show_boot_screen()
-import time
-time.sleep(2)
-init_screen()
-update_display(5.0, 46.5154, 6.6151, True, False)
+def show_connecting_screen(ssid):
+    """ Écran de transition pendant la tentative de connexion """
+    lcd.clear()
+    lcd.fillScreen(BG)
+    lcd.font(lcd.FONT_DejaVu18)
+    lcd.setTextColor(TEAL_LT, BG)
+    lcd.text(40, 90, "Connecting to Wi-Fi...")
+    lcd.font(lcd.FONT_Default)
+    lcd.setTextColor(WHITE, BG)
+    lcd.text(40, 130, "SSID: {}".format(ssid))
+
+def show_wifi_menu(networks):
+    lcd.clear()
+    lcd.fillScreen(BG)
+    lcd.font(lcd.FONT_DejaVu18)
+    lcd.setTextColor(PURPLE, BG)
+    lcd.text(10, 15, "AVAILABLE NETWORKS:")
+    lcd.fillRect(0, 40, 320, 2, PURPLE)
+    
+    lcd.font(lcd.FONT_Default)
+    lcd.setTextColor(WHITE, BG)
+    
+    y = 60
+    for ssid in networks[:5]:
+        lcd.text(20, y, "- {}".format(ssid))
+        y += 30
+        
+    lcd.fillRect(40, 200, 240, 35, TEAL)
+    lcd.setTextColor(WHITE, TEAL)
+    lcd.text(55, 212, "Connecting to iPhone...")
