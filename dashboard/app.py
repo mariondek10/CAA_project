@@ -11,6 +11,7 @@ import db_dtypes
 import json
 from google.cloud import secretmanager
 from google.oauth2 import service_account
+# Accesses for local testing
 #if os.path.exists("../../caabikeproject-ee4a905a2516.json"):
  #   key_path = "../../caabikeproject-ee4a905a2516.json"
 #else:
@@ -18,6 +19,7 @@ from google.oauth2 import service_account
 
 # os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
 
+# Credentials for Cloud Run (using Secret Manager)
 def get_bigquery_client():
     sm = secretmanager.SecretManagerServiceClient()
     # Utilise ton vrai nom de secret et ton project number
@@ -35,7 +37,7 @@ PROJECT_NAME = "caabikeproject"
 TABLE = f"{PROJECT_NAME}.BikeProject.geo_data"
 
 st.set_page_config(
-    page_title="Bike Dashboard",
+    page_title="Speed Dashboard",
     page_icon="🚲",
     layout="wide",
 )
@@ -88,7 +90,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
  
  
-# ── BigQuery helpers ──────────────────────────────────────────────────────────
+# BigQuery helpers
 @st.cache_resource
 def get_client():
     return bigquery.Client(project=PROJECT_NAME)
@@ -140,16 +142,15 @@ def speed_zone_distribution(df: pd.DataFrame) -> dict:
     """Classify speed samples into zones (km/h)."""
     spd = df["speed"].dropna()
     zones = {
-        "🟢 Easy  (<15)": (spd < 15).sum(),
-        "🟡 Moderate (15–25)": ((spd >= 15) & (spd < 25)).sum(),
-        "🟠 Hard  (25–35)": ((spd >= 25) & (spd < 35)).sum(),
-        "🔴 Max   (>35)": (spd >= 35).sum(),
+        "🐢 Easy  (<15)": (spd < 15).sum(),
+        "🐰 Moderate (15–25)": ((spd >= 15) & (spd < 25)).sum(),
+        "🦁 Hard  (>25)": ((spd >= 25).sum())
     }
     return zones
  
  
-# ── App layout ────────────────────────────────────────────────────────────────
-st.title("🚲 Bike Dashboard")
+# App layout
+st.title("🚲 Speed tracker Dashboard")
 st.caption("Your personal cycling analytics hub")
  
 # Sidebar – session selector
@@ -157,7 +158,7 @@ with st.sidebar:
     st.header("Session")
     sessions = get_sessions()
     if not sessions:
-        st.error("No sessions found in BigQuery.")
+        st.error("No sessions found in BigQuery. You need to record some rides first! 🚴‍♂️")
         st.stop()
  
     selected = st.selectbox(
@@ -175,7 +176,7 @@ if df.empty:
     st.warning("No data for this session.")
     st.stop()
  
-# ── KPI row ───────────────────────────────────────────────────────────────────
+# KPI row 
 st.markdown(f"### Session **#{selected}**")
  
 distance_km = haversine_series(df)
@@ -201,19 +202,19 @@ for col, (label, value, unit) in zip(cols, metrics):
         </div>
         """, unsafe_allow_html=True)
  
-# ── Map trace ─────────────────────────────────────────────────────────────────
+# Map trace 
 st.markdown('<div class="section-title">🗺 Route trace</div>', unsafe_allow_html=True)
 map_df = df[["latitude", "longitude"]].dropna().rename(
     columns={"latitude": "lat", "longitude": "lon"}
 )
 st.map(map_df, size=4, color="#60a5fa")
  
-# ── Speed chart ───────────────────────────────────────────────────────────────
+# Speed chart 
 st.markdown('<div class="section-title">⚡ Speed over time</div>', unsafe_allow_html=True)
 speed_df = df[["timestamp", "speed"]].dropna().set_index("timestamp")
 st.line_chart(speed_df, color="#60a5fa")
  
-# ── Speed zone distribution ───────────────────────────────────────────────────
+# Speed zone distribution 
 st.markdown('<div class="section-title">🏷 Speed zone distribution</div>', unsafe_allow_html=True)
 zones = speed_zone_distribution(df)
 zone_df = pd.DataFrame.from_dict(
@@ -231,7 +232,7 @@ st.dataframe(
     use_container_width=True,
 )
  
-# ── Pace analysis ─────────────────────────────────────────────────────────────
+# Pace analysis 
 st.markdown('<div class="section-title">📊 All-session overview</div>', unsafe_allow_html=True)
  
 @st.cache_data(ttl=300)
@@ -263,7 +264,7 @@ st.dataframe(
     use_container_width=True,
 )
  
-# ── Raw data expander ─────────────────────────────────────────────────────────
+# Raw data expander
 with st.expander("🔍 Raw session data"):
     st.dataframe(df, use_container_width=True)
  
