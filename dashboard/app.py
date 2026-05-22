@@ -54,7 +54,7 @@ st.markdown("""
   h1, h2, h3 { font-family: 'Syne', sans-serif !important; }
  
   .metric-card {
-    background: #0f1117;
+    background: #414770;
     border: 1px solid #2a2d3a;
     border-radius: 12px;
     padding: 1.2rem 1.5rem;
@@ -219,7 +219,7 @@ st.map(map_df, size=4, color="#60a5fa")
 # Speed chart 
 st.markdown('<div class="section-title">⚡ Speed over time</div>', unsafe_allow_html=True)
 speed_df = df[["timestamp", "speed"]].dropna().set_index("timestamp")
-st.line_chart(speed_df, color="#185a28")
+st.line_chart(speed_df, color="#60a5fa")
  
 # Speed zone distribution 
 st.markdown('<div class="section-title">🏷 Speed zone distribution</div>', unsafe_allow_html=True)
