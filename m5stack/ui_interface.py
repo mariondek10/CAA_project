@@ -160,7 +160,7 @@ def show_boot_screen():
     lcd.text(60, 145, "UNIL - CAA Project")
     
 def show_config_prompt():
-     lcd.clear()
+    lcd.clear()
     lcd.fillScreen(BG)
     lcd.font(lcd.FONT_DejaVu18)
     lcd.setTextColor(WHITE, BG)
