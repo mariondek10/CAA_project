@@ -38,7 +38,7 @@ from gps import GPS  # ton module GPS existant
 #     except Exception as e:
 #         print("[LoRa] Erreur d'envoi:", e)
 #         return False
-FLASK_URL = "http://<IP_DE_TON_PC>:8080/send-to-bigquery"
+FLASK_URL = "http://192.168.1.176:8080/send-to-bigquery"
 PASSWORD  = "M&M's"
 SESSION_ID = 1  # incrémente à chaque sortie
 
@@ -81,7 +81,7 @@ while True:
     if fix:
         lat, lon, spd = fix
         if spd < 5.0: spd = 0.0
-        lat, lon, speed = gps.get_data()  # ta fonction existante
+        lat, lon, speed = sensor.read_gps()  
         if lat is not None:
             success = send_data(lat, lon, speed, SESSION_ID)
             ui_interface.update_display(speed, lat, lon, True, success)
