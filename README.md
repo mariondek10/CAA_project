@@ -17,7 +17,7 @@ The M5Stack acts as the edge device, handling data collection, processing, and s
 - **Manual Session Management:** The GPS searches for a fix automatically, but data recording only begins upon user action.
   - **Button A (Left):** Start session / Pause session / Resume session.
   - **Button C (Right):** Stop & save session (forces a buffer flush). Pressing Start again generates a new session ID.
-- **Data Smoothing:** Raw GPS speeds `< 2.0 km/h` are filtered out. The display uses a Simple Moving Average (SMA) of the last 2 readings to prevent erratic speed jumps.
+- **Data Smoothing:** Raw GPS speeds `< 2.0 km/h` are filtered out. The display uses a Simple Moving Average (SMA) of the last 3 readings to prevent erratic speed jumps.
 - **Custom speed zones:** The UI displays real-time animal icons based on the rider's pace:
   - 🐢 **Tortoise:** < 15 km/h
   - 🐰 **Bunny:** 15 - 25 km/h

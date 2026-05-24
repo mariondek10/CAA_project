@@ -189,10 +189,10 @@ def show_config_prompt():
     lcd.setTextColor(WHITE, BG)
     lcd.text(40, 60, "CONFIGURE WI-FI?")
     
-    # Bouton tactile
-    lcd.fillRect(40, 110, 240, 50, PURPLE)
+    lcd.fillRect(20, 110, 280, 50, PURPLE)
     lcd.setTextColor(WHITE, PURPLE)
-    lcd.text(55, 125, "Touch screen to change")
+    
+    lcd.text(35, 125, "Touch screen to change")
     
     lcd.font(lcd.FONT_DefaultSmall)
     lcd.setTextColor(GREY, BG)

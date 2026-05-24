@@ -102,10 +102,14 @@ speed_history = []
 buffer = []
 SESSION_ID = 0
 
+btn_a_triggered = False
+btn_c_triggered = False
+
 # --- Main Loop ---
 while True:
     # 1. Controls (A = Start/Pause/Resume, C = Stop)
-    if btnA.wasPressed():
+    if btn_a_triggered or btnA.wasPressed():
+        btn_a_triggered = False # On réinitialise la mémoire
         if session_state == "STOPPED":
             SESSION_ID = get_and_increment_session()
             session_state = "RUNNING"
@@ -120,7 +124,8 @@ while True:
             session_state = "RUNNING"
             print("▶️ RESUMED")
 
-    if btnC.wasPressed():
+    if btn_c_triggered or btnC.wasPressed():
+        btn_c_triggered = False 
         if session_state != "STOPPED":
             print("⏹️ STOPPED")
             session_state = "STOPPED"
@@ -140,9 +145,9 @@ while True:
         if raw_speed < 1.0: 
             raw_speed = 0.0
             
-        # Moving average (last 2 values) for stable speed display
+        # Moving average (last 3 values) for stable speed display
         speed_history.append(raw_speed)
-        if len(speed_history) > 2:
+        if len(speed_history) > 3:
             speed_history.pop(0)
         speed = sum(speed_history) / len(speed_history)
         
@@ -166,10 +171,17 @@ while True:
             time.sleep(0.2)
 
     ui_interface.update_display(speed, lat, lon, gps_active, wifi_status, session_state)
+    
+    # 4. Smart Pause : On écoute les boutons pendant qu'on attend !
     for _ in range(50):
         time.sleep(0.1)
-        if btnA.wasPressed() or btnC.wasPressed():
+        if btnA.wasPressed():
+            btn_a_triggered = True
             break 
+        if btnC.wasPressed():
+            btn_c_triggered = True
+            break 
+
 # --------------------------------------------------------------------------------
 # LoRa test implementation
 # --------------------------------------------------------------------------------
