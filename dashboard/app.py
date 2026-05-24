@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import requests
 import time
+import plotly.express as px
 from datetime import datetime
 import os
 import hashlib
@@ -175,6 +176,18 @@ with st.sidebar:
     )
     st.divider()
     st.caption(f"{len(sessions)} sessions recorded")
+
+    # Session suppression button
+    st.divider()
+    if st.button("🗑️ Delete this session", use_container_width=True):
+        # BigQuery DELETE query to remove all data points of the selected session
+        delete_query = f"DELETE FROM `{TABLE}` WHERE session_id = {selected}"
+        client.query(delete_query).result() # Le .result() attend que l'action soit finie
+        
+        st.cache_data.clear()
+        st.success(f"Session #{selected} deleted successfully!")
+        time.sleep(1.5)
+        st.rerun()
  
 # Load data
 df = get_session_data(selected)
@@ -210,12 +223,40 @@ for col, (label, value, unit) in zip(cols, metrics):
         """, unsafe_allow_html=True)
  
 # Map trace 
-st.markdown('<div class="section-title">🗺 Route trace</div>', unsafe_allow_html=True)
-map_df = df[["latitude", "longitude"]].dropna().rename(
-    columns={"latitude": "lat", "longitude": "lon"}
-)
-st.map(map_df, size=4, color="#60a5fa")
+# st.markdown('<div class="section-title">🗺 Route trace</div>', unsafe_allow_html=True)
+# map_df = df[["latitude", "longitude"]].dropna().rename(
+#     columns={"latitude": "lat", "longitude": "lon"}
+# )
+# st.map(map_df, size=4, color="#60a5fa")
  
+
+# Map trace 
+st.markdown('<div class="section-title">🗺 Route trace</div>', unsafe_allow_html=True)
+
+# On filtre les éventuelles coordonnées nulles qui fausseraient la carte
+map_df = df[(df["latitude"] != 0.0) & (df["longitude"] != 0.0)]
+
+if not map_df.empty:
+    # Création d'une ligne sur une carte au style sombre
+    fig = px.line_mapbox(
+        map_df, 
+        lat="latitude", 
+        lon="longitude", 
+        color_discrete_sequence=["#60a5fa"], 
+        zoom=13
+    )
+    
+    # Configuration du fond de carte
+    fig.update_layout(
+        mapbox_style="carto-darkmatter",
+        margin={"r": 0, "t": 0, "l": 0, "b": 0},
+        height=400
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+else:
+    st.info("Waiting for valid GPS coordinates to draw the map...")
+
 # Speed chart 
 st.markdown('<div class="section-title">⚡ Speed over time</div>', unsafe_allow_html=True)
 speed_df = df[["timestamp", "speed"]].dropna().set_index("timestamp")
@@ -238,7 +279,7 @@ st.dataframe(
     },
     use_container_width=True,
 )
- 
+
 # Pace analysis with speed zones and distance by zone thanks to SQL query
 st.markdown('<div class="section-title">📊 All-session overview</div>', unsafe_allow_html=True)
  
