@@ -109,7 +109,7 @@ btn_c_triggered = False
 while True:
     # 1. Controls (A = Start/Pause/Resume, C = Stop)
     if btn_a_triggered or btnA.wasPressed():
-        btn_a_triggered = False # On réinitialise la mémoire
+        btn_a_triggered = False 
         if session_state == "STOPPED":
             SESSION_ID = get_and_increment_session()
             session_state = "RUNNING"
@@ -172,7 +172,6 @@ while True:
 
     ui_interface.update_display(speed, lat, lon, gps_active, wifi_status, session_state)
     
-    # 4. Smart Pause : On écoute les boutons pendant qu'on attend !
     for _ in range(50):
         time.sleep(0.1)
         if btnA.wasPressed():
