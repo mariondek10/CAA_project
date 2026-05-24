@@ -7,9 +7,9 @@ import json
 from google.cloud import secretmanager
 from google.oauth2 import service_account
 
-#key_path = r"C:\Users\marin\bike_project\caabikeproject-ee4a905a2516.json"
+# key_path = r"C:\Users\marin\bike_project\caabikeproject-ee4a905a2516.json"
 
-#os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
 
 # Credentials for Cloud Run (using Secret Manager)
 def get_bigquery_client():

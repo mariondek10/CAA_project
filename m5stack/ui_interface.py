@@ -15,7 +15,7 @@ ORANGE_DARK = 0xBA7517
 BEIGE       = 0xF5C4B3 
 BLACK       = 0x000000
 
-## Turtle drawing function
+# Drawings functions 
 def draw_turtle(x, y):
     lcd.fillCircle(x, y, 12, TEAL)
     lcd.fillCircle(x-5, y, 10, TEAL)
@@ -35,16 +35,13 @@ def draw_turtle(x, y):
     lcd.fillCircle(x-13, y+7, 4, TEAL)  
     lcd.fillCircle(x+13, y+7, 4, TEAL)  
     lcd.fillCircle(x, y+16, 3, TEAL)
-
-## Bunny drawing function    
+    
 def draw_bunny(x, y):
     lcd.fillCircle(x, 136, 8, TEAL)
     lcd.fillCircle(x, 126, 5, TEAL)
     lcd.fillRect(x-6, y-12, 4, 12, TEAL)
     lcd.fillRect(x+2, y-12, 4, 12, TEAL)
 
-
-## Lion drawing function
 def draw_lion(x, y):
     lcd.fillCircle(x,    y,    13, ORANGE_DARK)
     lcd.fillCircle(x-10, y-7,   6, ORANGE_DARK)
@@ -75,14 +72,13 @@ def draw_lion(x, y):
     lcd.fillCircle(x+6, y+4, 1, BLACK)
     lcd.fillCircle(x+9, y+3, 1, BLACK)
 
-
-## Update the display with current speed, GPS status, Wi-Fi status and drawing corresponding 
 def draw_speed_icon(speed):
     lcd.fillRect(0, 118, 320, 32, DARK)
     lcd.font(lcd.FONT_DefaultSmall)
     
     if speed < 15:
         draw_turtle(20 ,134)
+        lcd.setTextColor(TEAL_LT, DARK)
         lcd.text(46, 128, "TORTOISE")
         lcd.setTextColor(GREY, DARK)
         lcd.text(46, 138, "< 15 km/h")
@@ -99,10 +95,10 @@ def draw_speed_icon(speed):
         lcd.setTextColor(GREY, DARK)
         lcd.text(46, 138, "> 25 km/h")
 
-## Initialize the screen with title and separators
 def init_screen():
     lcd.clear()
     lcd.fillScreen(BG)
+    
     lcd.fillRect(0, 0, 320, 28, BAR)
     lcd.font(lcd.FONT_DejaVu18)
     lcd.setTextColor(PURPLE, BAR)
@@ -110,12 +106,28 @@ def init_screen():
     lcd.font(lcd.FONT_Default)
     lcd.setTextColor(WHITE, TEAL)
     lcd.fillRect(0, 28, 320, 2, PURPLE)
+    
+    lcd.fillRect(0, 222, 320, 18, BAR) 
+    lcd.font(lcd.FONT_DefaultSmall)
+    lcd.setTextColor(WHITE, BAR)
+    lcd.text(15, 226, "START/PAUSE") 
+    lcd.text(275, 226, "STOP")
 
-
-## Main function to update the display with current speed, GPS status, Wi-Fi status and drawing corresponding icons
-def update_display(speed, lat, lon, has_fix, wifi_ok=False):
+def update_display(speed, lat, lon, has_fix, wifi_ok=False, session_state="STOPPED"):
     gps_col  = TEAL_LT if has_fix else RED
     wifi_col = TEAL_LT if wifi_ok else RED
+
+    lcd.fillRect(200, 2, 120, 24, BAR) 
+    lcd.font(lcd.FONT_DejaVu18)
+    if session_state == "RUNNING":
+        lcd.setTextColor(RED, BAR)
+        lcd.text(260, 6, "REC")
+    elif session_state == "PAUSED":
+        lcd.setTextColor(ORANGE, BAR)
+        lcd.text(240, 6, "PAUSE")
+    else:
+        lcd.setTextColor(GREY, BAR) 
+        lcd.text(250, 6, "STOP")
 
     lcd.fillRect(0, 32, 320, 18, DARK)
     lcd.font(lcd.FONT_Default)
@@ -124,7 +136,8 @@ def update_display(speed, lat, lon, has_fix, wifi_ok=False):
     lcd.text(6, 36, "GPS: LOCKED" if has_fix else "GPS: SEARCHING")
 
     lcd.setTextColor(wifi_col, DARK)
-    lcd.text(200, 36, "Wifi: OK" if wifi_ok else "Wifi: NO Connection")
+    lcd.text(200, 36, "Wifi: OK" if wifi_ok else "Wifi: NO Conn")
+    
     lcd.fillRect(0, 52, 320, 100, DARK)
     lcd.font(lcd.FONT_DefaultSmall)
     lcd.setTextColor(GREY, DARK)
@@ -135,7 +148,9 @@ def update_display(speed, lat, lon, has_fix, wifi_ok=False):
     lcd.font(lcd.FONT_DejaVu18)
     lcd.setTextColor(GREY, DARK)
     lcd.text(238, 90, "km/h")
+    
     draw_speed_icon(speed)
+    
     lcd.fillRect(0, 155, 320, 1, BAR)
     lcd.fillRect(0, 156, 320, 50, DARK)
     lcd.font(lcd.FONT_DejaVu18)
@@ -174,7 +189,7 @@ def show_config_prompt():
     lcd.setTextColor(WHITE, BG)
     lcd.text(40, 60, "CONFIGURE WI-FI?")
     
-    
+    # Bouton tactile
     lcd.fillRect(40, 110, 240, 50, PURPLE)
     lcd.setTextColor(WHITE, PURPLE)
     lcd.text(55, 125, "Touch screen to change")

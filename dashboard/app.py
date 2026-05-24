@@ -13,11 +13,11 @@ import json
 from google.cloud import secretmanager
 from google.oauth2 import service_account
 
-## Accesses for local testing
-#if os.path.exists("../../caabikeproject-ee4a905a2516.json"):
- #   key_path = "../../caabikeproject-ee4a905a2516.json"
-#else:
-  #  key_path = r"C:\Users\marin\bike_project\caabikeproject-ee4a905a2516.json"
+# # Accesses for local testing
+# if os.path.exists("../../caabikeproject-ee4a905a2516.json"):
+#    key_path = "../../caabikeproject-ee4a905a2516.json"
+# else:
+#    key_path = r"C:\Users\marin\bike_project\caabikeproject-ee4a905a2516.json"
 
 # os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
 

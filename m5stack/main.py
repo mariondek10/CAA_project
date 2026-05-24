@@ -1,18 +1,19 @@
-## Imports 
 import time
 import sensor
 import ui_interface
 import network
 import urequests
 import ujson
-from m5stack import touch 
+from m5stack import touch, btnA, btnC
 
-## Wifi connexion
-
+# --- Config ---
 WIFI_SSID = "iPhone (48)"  
 WIFI_PASS = "09651234"          
+FLASK_URL = "https://bike-backend-387007830650.europe-west6.run.app/send-to-bigquery"
+PASSWORD  = "M&M's"
+SESSION_FILE = "session.txt"
 
-## Link with the m5stack boot
+# --- Wi-Fi Setup ---
 def connect_wifi(ssid, password):
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
@@ -26,15 +27,14 @@ def connect_wifi(ssid, password):
     return wlan.isconnected()
 
 def run_wifi_interactive_config():
-    """ Handles the interactive Wi-Fi configuration at startup if the user touches the screen """
+    """ Handles interactive Wi-Fi config on startup if screen is touched """
     ui_interface.show_config_prompt()
-    
-    ## Wait for 5 seconds to detect a touch on the screen to enter Wi-Fi config mode
     start_time = time.time()
     touch_detected = False
     
+    # Wait 5s for user touch
     while time.time() - start_time < 5:
-        if touch.status(): # Si un doigt touche l'écran
+        if touch.status(): 
             touch_detected = True
             break
         time.sleep(0.1)
@@ -43,8 +43,6 @@ def run_wifi_interactive_config():
         print("Scan mode activated!")
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
-        
-        networks_found = []
         try:
             scan_results = wlan.scan()
             networks_found = [res[0].decode('utf-8') for res in scan_results if res[0]]
@@ -55,30 +53,17 @@ def run_wifi_interactive_config():
         time.sleep(4) 
         
     ui_interface.show_connecting_screen(WIFI_SSID)
-    
     connect_wifi(WIFI_SSID, WIFI_PASS)
 
-## Start the UI with a boot screen while connecting to Wi-Fi in the background
-ui_interface.show_boot_screen()
-time.sleep(1.5)
-
-run_wifi_interactive_config()
-
-ui_interface.init_screen()
-
-## Backend configuration
-FLASK_URL = "https://bike-backend-387007830650.europe-west6.run.app/send-to-bigquery"
-PASSWORD  = "M&M's"
-SESSION_FILE = "session.txt"
-
-## Increment the session ID at each startup to differentiate sessions in the BigQuery table
+# --- Session Management ---
 def get_and_increment_session():
+    """ Reads last session ID from file and increments it """
     try:
         with open(SESSION_FILE, "r") as f:
-            current_session = int(f.read().strip())
+            current = int(f.read().strip())
     except Exception:
-        current_session = 0
-    new_session = current_session + 1
+        current = 0
+    new_session = current + 1
     try:
         with open(SESSION_FILE, "w") as f:
             f.write(str(new_session))
@@ -86,23 +71,13 @@ def get_and_increment_session():
         pass
     return new_session
 
-SESSION_ID = get_and_increment_session()
-buffer = []
-
-## Function to check Wi-Fi connection and send data to the backend
-def is_connected():
-    wlan = network.WLAN(network.STA_IF)
-    return wlan.isconnected()
-
-## Send the data to the Flask app
 def send_data(lat, lon, speed, session_id):
+    """ Sends payload to Flask backend """
     payload = {
         "passwd": PASSWORD,
         "values": {
-            "latitude":   lat,
-            "longitude":  lon,
-            "speed":      speed,
-            "session_id": session_id
+            "latitude": lat, "longitude": lon, 
+            "speed": speed, "session_id": session_id
         }
     }
     try:
@@ -112,20 +87,75 @@ def send_data(lat, lon, speed, session_id):
     except Exception:
         return False
 
-## Main loop 
+def is_connected():
+    return network.WLAN(network.STA_IF).isconnected()
+
+# --- Boot Sequence ---
+ui_interface.show_boot_screen()
+time.sleep(1.5)
+run_wifi_interactive_config()
+ui_interface.init_screen()
+
+# --- State Variables ---
+session_state = "STOPPED" # States: STOPPED, RUNNING, PAUSED
+speed_history = []
+buffer = []
+SESSION_ID = 0
+
+# --- Main Loop ---
 while True:
+    # 1. Controls (A = Start/Pause/Resume, C = Stop)
+    if btnA.wasPressed():
+        if session_state == "STOPPED":
+            SESSION_ID = get_and_increment_session()
+            session_state = "RUNNING"
+            buffer.clear()
+            speed_history.clear()
+            print("▶️ START SESSION: #{}".format(SESSION_ID))            
+        elif session_state == "RUNNING":
+            session_state = "PAUSED"
+            print("⏸️ PAUSED")
+            
+        elif session_state == "PAUSED":
+            session_state = "RUNNING"
+            print("▶️ RESUMED")
+
+    if btnC.wasPressed():
+        if session_state != "STOPPED":
+            print("⏹️ STOPPED")
+            session_state = "STOPPED"
+            # Flush remaining buffer before stopping
+            if is_connected() and buffer:
+                for p in buffer[:]:
+                    send_data(p[0], p[1], p[2], SESSION_ID)
+            buffer.clear()
+
+    # 2. GPS 
     fix = sensor.read_gps()
     wifi_status = is_connected()
     
     if fix is not None:
-        lat, lon, speed = fix
-        if speed < 5.0: speed = 0.0
-        buffer.append((lat, lon, speed))
+        lat, lon, raw_speed = fix
+        
+        if raw_speed < 1.0: 
+            raw_speed = 0.0
+            
+        # Moving average (last 2 values) for stable speed display
+        speed_history.append(raw_speed)
+        if len(speed_history) > 2:
+            speed_history.pop(0)
+        speed = sum(speed_history) / len(speed_history)
+        
         gps_active = True
+        
+        # Only record data if session is active
+        if session_state == "RUNNING":
+            buffer.append((lat, lon, speed))
     else:
         lat, lon, speed = 0.0, 0.0, 0.0
         gps_active = False
 
+    # 3. Background Data Transmission
     success_envoi = False
     if wifi_status and buffer:
         for point in buffer[:]:
@@ -135,117 +165,33 @@ while True:
                 buffer.remove(point)
             time.sleep(0.2)
 
-    ui_interface.update_display(speed, lat, lon, gps_active, wifi_status)
-    time.sleep(5)
-
-
-## --------------------------------------------------------------------------------
-## The following commented code is the original test we made with the LoRa module
+    ui_interface.update_display(speed, lat, lon, gps_active, wifi_status, session_state)
+    for _ in range(50):
+        time.sleep(0.1)
+        if btnA.wasPressed() or btnC.wasPressed():
+            break 
+# --------------------------------------------------------------------------------
+# LoRa test implementation
+# --------------------------------------------------------------------------------
 # import struct
-# from tomlkit import datetime
 # import ubinascii
-# import time
-# import sensor
-# import ui_interface
 # from machine import UART
-# import network
-# import urequests
-# import ujson
-# import time
-# from gps import GPS  # ton module GPS existant
-
-
-# # # Configuration
-# # lora = UART(1, baudrate=115200, rx=13, tx=14)
-
-# # def send_lora(lat, lon, speed, session): 
-# #     try:
-# #         # 1. Préparation du payload (10 octets au total)
-# #         # Lat (4) + Lon (4) + Speed (1) + Session (1) = 10 octets
-# #         payload_bytes = struct.pack('<iiBB', int(lat * 100000), int(lon * 100000), int(speed), session)
-# #         hex_payload = ubinascii.hexlify(payload_bytes).decode('utf-8').upper()
-        
-# #         # 2. Construction de la commande AT+DTRX
-# #         payload_len = len(payload_bytes)
-# #         cmd_str = 'AT+DTRX=1,0,{},{}'.format(payload_len, hex_payload)
-        
-# #         print("[LoRa] Envoi :", cmd_str)
-# #         lora.write((cmd_str + '\r\n').encode())
-        
-# #         time.sleep(3) 
-# #         if lora.any():
-# #             resp = lora.read().decode('utf-8', 'ignore')
-# #             print("[LoRa] Réponse :", resp.strip())
-# #             return "SEND" in resp 
-# #         return False
-# #     except Exception as e:
-# #         print("[LoRa] Erreur d'envoi:", e)
-# #         return False
-# FLASK_URL = "http://192.168.1.176:8080/send-to-bigquery"
-# PASSWORD  = "M&M's"
-# SESSION_ID = 1  # incrémente à chaque sortie
-
-# '''def get_timestamp():
-#     t = time.localtime()
-#     return "{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(
-#         t[0], t[1], t[2], t[3], t[4], t[5]
-#     )'''
-
-# def send_data(lat, lon, speed, session_id):
-#     payload = {
-#         "passwd": PASSWORD,
-#         "values": {
-#             "latitude":   lat,
-#             "longitude":  lon,
-#             "timestamp": datetime.utcnow().isoformat(),
-#             "speed":      speed,
-#             "session_id": session_id
-#         }
-#     }
+# lora = UART(1, baudrate=115200, rx=13, tx=14)
+#
+# def send_lora(lat, lon, speed, session): 
 #     try:
-#         r = urequests.post(
-#             FLASK_URL,
-#             data=ujson.dumps(payload),
-#             headers={"Content-Type": "application/json"},
-#             timeout=5
-#         )
-#         print("Réponse:", r.text)
-#         r.close()
+#         payload_bytes = struct.pack('<iiBB', int(lat * 100000), int(lon * 100000), int(speed), session)
+#         hex_payload = ubinascii.hexlify(payload_bytes).decode('utf-8').upper()
+#         cmd_str = 'AT+DTRX=1,0,{},{}'.format(len(payload_bytes), hex_payload)
+#         lora.write((cmd_str + '\r\n').encode())
+#         time.sleep(3) 
+#         if lora.any():
+#             resp = lora.read().decode('utf-8', 'ignore')
+#             return "SEND" in resp 
+#         return False
 #     except Exception as e:
-#         print("Erreur envoi:", e)
-
-# # # --- DÉMARRAGE ---
-# ui_interface.init_screen()
-# print("Démarrage du système...")
-
-# # Boucle principale
-# while True:
-#     fix = sensor.read_gps(timeout_ms=500)
-#     if fix:
-#         lat, lon, spd = fix
-#         if spd < 5.0: spd = 0.0
-#         lat, lon, speed = sensor.read_gps()  
-#         if lat is not None:
-#             success = send_data(lat, lon, speed, SESSION_ID)
-#             ui_interface.update_display(speed, lat, lon, True, success)
-#     else:
-#         ui_interface.update_display(0.0, 0.0, 0.0, False, False)
-
-#     time.sleep(5)  # envoie toutes les 5 secondes
-
-    
-# '''while True:
-#     fix = sensor.read_gps(timeout_ms=500)
-#     if fix:
-#         lat, lon, spd = fix
-#         if spd < 5.0: spd = 0.0
-        
-#         # Envoi
-#         success = send_lora(lat, lon, spd, 1)
-#         ui_interface.update_display(spd, lat, lon, True, success)
-#     else:
-#         ui_interface.update_display(0.0, 0.0, 0.0, False, False)'''
-    
-# #     # Pause de 60 secondes pour respecter la législation (Duty Cycle)
-# #     time.sleep(60)
-
+#         return False
+# 
+# # Inside loop:
+# # success = send_lora(lat, lon, spd, 1)
+# # ui_interface.update_display(spd, lat, lon, True, success)
