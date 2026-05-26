@@ -7,6 +7,10 @@ An end-to-end IoT tracking solution that collects GPS data during cycling sessio
 - Marine Hosch
 - Marion de Kerchove
 
+### Workload distribution:
+
+Overall, we both worked on all aspects of the project, either collaborating directly or building on each other’s work. Although we both contributed to the project as a whole, Marion focused particularly on the Google Cloud, backend and dashboard aspects, whilst Marine mainly worked on the features related to the M5Stack.
+
 ## Overall architecture
 
 The hardware logic relies on parsing NMEA data from the GPS module and sending smoothed telemetry over Wi-Fi.
