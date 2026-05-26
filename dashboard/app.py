@@ -233,11 +233,9 @@ for col, (label, value, unit) in zip(cols, metrics):
 # Map trace 
 st.markdown('<div class="section-title">🗺 Route trace</div>', unsafe_allow_html=True)
 
-# On filtre les éventuelles coordonnées nulles qui fausseraient la carte
 map_df = df[(df["latitude"] != 0.0) & (df["longitude"] != 0.0)]
 
 if not map_df.empty:
-    # Création d'une ligne sur une carte au style sombre
     fig = px.line_mapbox(
         map_df, 
         lat="latitude", 
@@ -246,9 +244,8 @@ if not map_df.empty:
         zoom=13
     )
     
-    # Configuration du fond de carte
     fig.update_layout(
-        mapbox_style="carto-darkmatter",
+        mapbox_style="open-street-map",
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
         height=400
     )
