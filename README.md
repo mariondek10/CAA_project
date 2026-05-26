@@ -109,6 +109,6 @@ Update the flask URL (FLASK_URL) and Wifi configuration (WIFI_SSID, WIFI_PASS) i
 
 **Live Dashboard of sessions:** [Link](https://bike-app-387007830650.europe-west6.run.app/)
 
-**YouTube video:** [Link]( )
+**YouTube video:** [Link](https://youtu.be/IUNoYSusqZE)
 
 **Github repository:** [Link](https://github.com/mariondek10/CAA_project)
