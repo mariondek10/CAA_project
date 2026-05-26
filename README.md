@@ -36,8 +36,12 @@ The backend architecture ensures reliable data ingestion and provides an analyti
 - **Frontend:** A Streamlit dashboard utilizing Plotly Express for route mapping and pandas for pace analysis.
 - **Security:** API keys and credentials are securely managed via Google Cloud Secret Manager.
 
-**Live Backend Endpoint:** `https://bike-backend-387007830650.europe-west6.run.app/send-to-bigquery`
+## Links
 
-**Live Dashboard of sessions:** `https://bike-app-387007830650.europe-west6.run.app/`
+**Live Backend Endpoint:** [Link](https://bike-backend-387007830650.europe-west6.run.app/send-to-bigquery)
 
-**YouTube video:** 
+**Live Dashboard of sessions:** [Link](https://bike-app-387007830650.europe-west6.run.app/)
+
+**YouTube video:** [Link]()
+
+**Github repository:*** `[Link](https://github.com/mariondek10/CAA_project)
