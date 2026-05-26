@@ -58,20 +58,26 @@ CREATE TABLE `caabikeproject.BikeProject.geo_data` (
 ### 2. Backend
 
 The backend functions are dockerized container deployed on Google Cloud
-to build and deploy, in your terminal, navigate to the backend directory and run the following command:
+to build and deploy, in the cloud shell terminal, navigate to the correct directory and run the following command:
 
 ```bash
-# Build app (make sure d'avoir pull et d'etre dans le directory /dashboard)
-gcloud builds submit --tag europe-west6-docker.pkg.dev/caabikeproject/bike-repo/bike_app:latest .
+# Build app (make sure that you pulled the last version and to be in the directory /dashboard)
+gcloud builds submit --tag europe-west6-docker.pkg.dev/YOUR_PROJECT_ID/YOUR_REPO_CLOUD/bike_app:latest .
 
 # Run app
-gcloud run deploy bike-app   --image europe-west6-docker.pkg.dev/caabikeproject/bike-repo/bike_app:latest   --region europe-west6   --allow-unauthenticated
+gcloud run deploy bike-app   --image europe-west6-docker.pkg.dev/YOUR_PROJECT_ID/YOUR_REPO_CLOUD/bike_app:latest   --region europe-west6   --allow-unauthenticated
 
-# Build backend (make sure d'avoir pull et d'etre dans le directory /backend)
-gcloud builds submit --tag europe-west6-docker.pkg.dev/caabikeproject/bike-repo/bike_backend:latest .
+# Build backend (make sure that you pulled the last version and to be in the directory /backend)
+gcloud builds submit --tag europe-west6-docker.pkg.dev/YOUR_PROJECT_ID/YOUR_REPO_CLOUD/bike_backend:latest .
 
 # Run backend
-gcloud run deploy bike-backend   --image europe-west6-docker.pkg.dev/caabikeproject/bike-repo/bike_backend:latest   --region europe-west6   --allow-unauthenticated
+gcloud run deploy bike-backend   --image europe-west6-docker.pkg.dev/YOUR_PROJECT_ID/YOUR_REPO_CLOUD/bike_backend:latest   --region europe-west6   --allow-unauthenticated
+```
+⚠️ You should have already cloned your repo and build the image on Google cloud here are the command as a reminder 
+
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO
+gcloud artifacts repositories create NAME_OF_YOUR_REPO --repository-format=docker --location=europe-west6 --description="ADD YOUR OWN"
 ```
 
 ### Frontend deployement (Streamlit)
@@ -79,6 +85,7 @@ gcloud run deploy bike-backend   --image europe-west6-docker.pkg.dev/caabikeproj
 To deploy and run the user dashboard locally, in your terminal, go to the dashboard directory ans run the following command:
 
 ```bash
+cd dashboard
 pip install -r requirements.txt
 streamlit run app.py
 ```
@@ -102,10 +109,6 @@ Update the flask URL (FLASK_URL) and Wifi configuration (WIFI_SSID, WIFI_PASS) i
 
 **Live Dashboard of sessions:** [Link](https://bike-app-387007830650.europe-west6.run.app/)
 
-**YouTube video:** [Link]()
+**YouTube video:** [Link]( )
 
-**Github repository:\*** `[Link](https://github.com/mariondek10/CAA_project)
-
-```
-
-```
+**Github repository:** [Link](https://github.com/mariondek10/CAA_project)
