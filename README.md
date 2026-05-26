@@ -2,7 +2,11 @@
 
 An end-to-end IoT tracking solution that collects GPS data during cycling sessions, processes it on an ESP32-based microcontroller, and visualizes it via a cloud-deployed dashboard.
 
-## Overall Architecture
+## Members of the group
+- Marine Hosch
+- Marion de Kerchove
+
+## Overall architecture
 
 The hardware logic relies on parsing NMEA data from the GPS module and sending smoothed telemetry over Wi-Fi.
 
@@ -35,3 +39,5 @@ The backend architecture ensures reliable data ingestion and provides an analyti
 **Live Backend Endpoint:** `https://bike-backend-387007830650.europe-west6.run.app/send-to-bigquery`
 
 **Live Dashboard of sessions:** `https://bike-app-387007830650.europe-west6.run.app/`
+
+**YouTube video:** 
