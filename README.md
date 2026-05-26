@@ -77,7 +77,8 @@ gcloud builds submit --tag europe-west6-docker.pkg.dev/YOUR_PROJECT_ID/YOUR_REPO
 # Run backend
 gcloud run deploy bike-backend   --image europe-west6-docker.pkg.dev/YOUR_PROJECT_ID/YOUR_REPO_CLOUD/bike_backend:latest   --region europe-west6   --allow-unauthenticated
 ```
-⚠️ You should have already cloned your repo and build the image on Google cloud here are the command as a reminder 
+
+⚠️ You should have already cloned your repo and build the image on Google cloud here are the command as a reminder
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/YOUR_REPO
