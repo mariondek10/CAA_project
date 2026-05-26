@@ -245,7 +245,7 @@ if not map_df.empty:
     )
     
     fig.update_layout(
-        mapbox_style="open-street-map",
+        mapbox_style="carto-positron",
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
         height=400
     )
