@@ -33,3 +33,5 @@ The backend architecture ensures reliable data ingestion and provides an analyti
 - **Security:** API keys and credentials are securely managed via Google Cloud Secret Manager.
 
 **Live Backend Endpoint:** `https://bike-backend-387007830650.europe-west6.run.app/send-to-bigquery`
+
+**Live Dashboard of sessions:** `https://bike-app-387007830650.europe-west6.run.app/`
