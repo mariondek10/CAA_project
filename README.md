@@ -3,6 +3,7 @@
 An end-to-end IoT tracking solution that collects GPS data during cycling sessions, processes it on an ESP32-based microcontroller, and visualizes it via a cloud-deployed dashboard.
 
 ## Members of the group
+
 - Marine Hosch
 - Marion de Kerchove
 
@@ -36,6 +37,65 @@ The backend architecture ensures reliable data ingestion and provides an analyti
 - **Frontend:** A Streamlit dashboard utilizing Plotly Express for route mapping and pandas for pace analysis.
 - **Security:** API keys and credentials are securely managed via Google Cloud Secret Manager.
 
+## Deployement guide
+
+To replicate this project locally or deploy it to your own Google Cloud Platform (GCP) instance, follow these steps:
+
+### 1. Database setup (Google BigQuery)
+
+Create a DB named `BikeProject` with a table `geo_data` as follow :
+
+```sql
+CREATE TABLE `caabikeproject.BikeProject.geo_data` (
+    latitude FLOAT64,
+    longitude FLOAT64,
+    speed FLOAT64,
+    session_id INT64,
+    timestamp TIMESTAMP
+);
+```
+
+### 2. Backend
+
+The backend functions are dockerized container deployed on Google Cloud
+to build and deploy, in your terminal, navigate to the backend directory and run the following command:
+
+```bash
+# Build app (make sure d'avoir pull et d'etre dans le directory /dashboard)
+gcloud builds submit --tag europe-west6-docker.pkg.dev/caabikeproject/bike-repo/bike_app:latest .
+
+# Run app
+gcloud run deploy bike-app   --image europe-west6-docker.pkg.dev/caabikeproject/bike-repo/bike_app:latest   --region europe-west6   --allow-unauthenticated
+
+# Build backend (make sure d'avoir pull et d'etre dans le directory /backend)
+gcloud builds submit --tag europe-west6-docker.pkg.dev/caabikeproject/bike-repo/bike_backend:latest .
+
+# Run backend
+gcloud run deploy bike-backend   --image europe-west6-docker.pkg.dev/caabikeproject/bike-repo/bike_backend:latest   --region europe-west6   --allow-unauthenticated
+```
+
+### Frontend deployement (Streamlit)
+
+To deploy and run the user dashboard locally, in your terminal, go to the dashboard directory ans run the following command:
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+### M5stack
+
+To run the m5stack dashboard on your device, upload the following files to the device :
+
+- main.py
+- sensor.py
+- ui_interface.py
+- boot.py
+
+You can update the default Wifi configuration (WIFI_SSID, WIFI_PASS)in the boot.py file.
+
+Update the flask URL (FLASK_URL) and Wifi configuration (WIFI_SSID, WIFI_PASS) in the main.py file.
+
 ## Links
 
 **Live Backend Endpoint:** [Link](https://bike-backend-387007830650.europe-west6.run.app/send-to-bigquery)
@@ -44,4 +104,8 @@ The backend architecture ensures reliable data ingestion and provides an analyti
 
 **YouTube video:** [Link]()
 
-**Github repository:*** `[Link](https://github.com/mariondek10/CAA_project)
+**Github repository:\*** `[Link](https://github.com/mariondek10/CAA_project)
+
+```
+
+```
